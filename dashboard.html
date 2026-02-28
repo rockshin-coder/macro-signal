@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>MACRO SIGNAL</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#060a0f;--sur:#0d1520;--bdr:#1e3048;
+  --txt:#ffffff;--sub:#ccddf0;--mut:#7090a8;
+  --red:#ff3344;--grn:#00e87a;--yel:#ffb830;--cyn:#00d4ff;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{overflow-x:hidden}
+body{
+  background:var(--bg);color:var(--txt);
+  font-family:'DM Sans',sans-serif;font-size:16px;
+  background-image:
+    radial-gradient(ellipse at 15% 0%,rgba(0,212,255,.12) 0%,transparent 45%),
+    radial-gradient(ellipse at 85% 0%,rgba(0,232,122,.09) 0%,transparent 40%),
+    radial-gradient(ellipse at 50% 100%,rgba(255,51,68,.07) 0%,transparent 50%);
+}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;border-bottom:1px solid rgba(30,48,72,.8);
+  background:rgba(6,10,15,.9);position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(16px);
+  box-shadow:0 1px 0 rgba(0,212,255,.08),0 4px 20px rgba(0,0,0,.5);
+}
+.logo{font-family:'Bebas Neue';font-size:26px;letter-spacing:5px;
+  background:linear-gradient(135deg,var(--cyn),var(--grn));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo em{font-style:normal;font-size:13px;letter-spacing:2px;
+  font-family:'Space Mono';margin-left:12px;
+  -webkit-text-fill-color:var(--mut);color:var(--mut)}
+#ts{font-family:'Space Mono';font-size:13px;color:var(--sub)}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1520px;margin:0 auto;padding:16px 20px}
+.sec{margin-bottom:16px}
+
+/* ── CARD ── */
+.card{
+  background:linear-gradient(145deg,var(--sur),rgba(10,17,28,.97));
+  border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.ch{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid rgba(30,48,72,.7);
+  font-family:'Space Mono';font-size:12px;letter-spacing:2px;
+  color:var(--sub);text-transform:uppercase;background:rgba(0,0,0,.2);
+  flex-wrap:wrap;gap:6px}
+.cb{padding:16px 18px}
+
+/* ── TOP ROW ── */
+.top-row{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:14px}
+
+/* ── GAUGE ── */
+.gauge-card-inner{padding:18px 16px 14px}
+.gauge-wrap{display:flex;align-items:center;gap:16px}
+.gauge{position:relative;width:140px;height:140px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gauge svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.gauge .trk{fill:none;stroke:rgba(30,48,72,.9);stroke-width:11}
+.gauge .arc{fill:none;stroke-width:11;stroke-linecap:round;
+  transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1),stroke .3s;
+  filter:drop-shadow(0 0 6px currentColor)}
+.gauge-num{font-family:'Bebas Neue';font-size:56px;line-height:1;z-index:1}
+.gauge-sub{font-family:'Space Mono';font-size:13px;color:var(--mut);z-index:1}
+.gauge-bars{flex:1;min-width:0}
+
+/* ── SIGNAL ── */
+.sig{padding:9px 26px;border-radius:4px;font-family:'Bebas Neue';
+  font-size:30px;letter-spacing:6px;margin-top:14px;text-align:center}
+.sSELL{background:linear-gradient(135deg,#3a0810,#1a0408);
+  color:var(--red);border:1px solid rgba(255,51,68,.5);box-shadow:0 0 18px rgba(255,51,68,.25)}
+.sBUY{background:linear-gradient(135deg,#003820,#001f10);
+  color:var(--grn);border:1px solid rgba(0,232,122,.5);box-shadow:0 0 18px rgba(0,232,122,.25)}
+.sHOLD{background:linear-gradient(135deg,#002535,#001520);
+  color:var(--cyn);border:1px solid rgba(0,212,255,.5);box-shadow:0 0 18px rgba(0,212,255,.25)}
+.act{font-family:'Space Mono';font-size:13px;color:var(--sub);text-align:center;margin-top:8px}
+
+/* PROB */
+.prob-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pbox{border-radius:6px;padding:14px;text-align:center}
+.pbox-s{background:linear-gradient(135deg,#2a0810,#180408);border:1px solid rgba(255,51,68,.3)}
+.pbox-b{background:linear-gradient(135deg,#003318,#001a0c);border:1px solid rgba(0,232,122,.3)}
+.pbox-lbl{font-family:'Space Mono';font-size:11px;color:var(--sub);margin-bottom:6px}
+.pbox-num{font-family:'Bebas Neue';font-size:44px;line-height:1}
+.pbox-sub{font-family:'Space Mono';font-size:11px;color:var(--sub);margin-top:4px}
+.pbox-n{font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:2px}
+
+/* TABS */
+.htabs{display:flex;gap:4px;margin:10px 0 8px;flex-wrap:wrap}
+.htab{padding:6px 13px;font-family:'Space Mono';font-size:12px;
+  border:1px solid var(--bdr);border-radius:3px;cursor:pointer;
+  background:transparent;color:var(--sub);transition:all .15s;touch-action:manipulation}
+.htab.on{border-color:var(--cyn);color:var(--cyn);background:rgba(0,212,255,.12);
+  box-shadow:0 0 6px rgba(0,212,255,.2)}
+.htab:hover:not(.on){color:#fff}
+
+.ttabs{display:flex;gap:5px;padding:10px 16px 0}
+.ttab{padding:7px 18px;font-family:'Space Mono';font-size:12px;
+  border:1px solid var(--bdr);border-radius:3px;cursor:pointer;
+  background:transparent;color:var(--sub);transition:all .15s;touch-action:manipulation}
+.ttab.on{border-color:var(--cyn);color:var(--cyn);background:rgba(0,212,255,.12)}
+.ttab:hover:not(.on){color:#fff}
+
+.slbl{font-family:'Space Mono';font-size:11px;letter-spacing:2px;
+  color:var(--sub);text-transform:uppercase;margin-bottom:10px}
+
+/* IND BARS */
+.irow{display:flex;align-items:center;padding:7px 0;
+  border-bottom:1px solid rgba(30,48,72,.4);gap:8px}
+.irow:last-child{border-bottom:none}
+.inm{font-family:'Space Mono';font-size:11px;color:var(--sub);
+  width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.itrk{flex:1;height:6px;background:rgba(30,48,72,.9);border-radius:3px;overflow:hidden}
+.ifil{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ival{font-family:'Space Mono';font-size:13px;font-weight:700;width:36px;text-align:right;flex-shrink:0}
+.ipct{font-family:'Space Mono';font-size:11px;color:var(--mut);width:36px;text-align:right;flex-shrink:0}
+
+/* ── CHART TOOLBAR ── */
+.chart-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid rgba(30,48,72,.5);
+  gap:10px;flex-wrap:wrap;
+}
+.chart-toolbar-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.chart-title{font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;color:var(--sub)}
+.legend-row{display:flex;gap:14px;align-items:center}
+.legend-row span{font-size:14px;display:flex;align-items:center;gap:6px;color:#fff}
+.ldot{display:inline-block;width:10px;height:10px;border-radius:50%}
+
+.chart-toolbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.range-btns{display:flex;gap:4px;flex-wrap:wrap}
+.rbtn{padding:6px 14px;font-family:'Space Mono';font-size:12px;
+  border:1px solid var(--bdr);border-radius:3px;cursor:pointer;
+  background:transparent;color:var(--sub);transition:all .15s;
+  white-space:nowrap;touch-action:manipulation}
+.rbtn.on{border-color:var(--cyn);color:var(--cyn);background:rgba(0,212,255,.12);
+  box-shadow:0 0 6px rgba(0,212,255,.15)}
+.rbtn:hover:not(.on){color:#fff}
+.chart-actions{display:flex;gap:5px}
+.cbtn{padding:6px 13px;font-family:'Space Mono';font-size:12px;
+  border:1px solid var(--bdr);border-radius:3px;cursor:pointer;
+  background:transparent;color:var(--sub);transition:all .15s;touch-action:manipulation}
+.cbtn:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+
+/* CANVAS */
+.chart-canvas-wrap{position:relative;padding:12px 16px 8px;cursor:crosshair}
+.chart-canvas-wrap:active{cursor:grabbing}
+
+/* ── 마우스 따라다니는 TOOLTIP ── */
+#chart-tooltip{
+  position:fixed;
+  pointer-events:none;
+  z-index:9999;
+  display:none;
+  min-width:200px;
+  background:rgba(8,14,24,.97);
+  border:1px solid rgba(30,48,72,.9);
+  border-radius:6px;
+  padding:10px 14px;
+  box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 0 1px rgba(0,212,255,.08);
+  backdrop-filter:blur(8px);
+}
+.tt-date{
+  font-family:'Space Mono';font-size:11px;color:var(--cyn);
+  margin-bottom:8px;padding-bottom:6px;
+  border-bottom:1px solid rgba(30,48,72,.8);letter-spacing:1px;
+}
+.tt-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:3px 0;gap:16px;
+}
+.tt-label{font-family:'Space Mono';font-size:11px;color:var(--mut)}
+.tt-value{font-family:'Space Mono';font-size:12px;font-weight:700;white-space:nowrap}
+.tt-sep{height:1px;background:rgba(30,48,72,.6);margin:6px 0}
+
+/* INFO BAR (하단) */
+.chart-info{
+  display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+  padding:8px 18px;border-top:1px solid rgba(30,48,72,.4);
+  min-height:38px;background:rgba(0,0,0,.15);
+}
+.ci{font-family:'Space Mono';font-size:13px;color:var(--sub)}
+.ci span{font-weight:700;margin-left:4px}
+.ci-empty{font-family:'Space Mono';font-size:12px;color:var(--mut)}
+
+/* TABLES */
+table.ht{width:100%;border-collapse:collapse}
+table.ht th{font-family:'Space Mono';font-size:12px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--sub);padding:10px 12px;
+  border-bottom:1px solid rgba(30,48,72,.7);text-align:left;white-space:nowrap}
+table.ht td{padding:9px 12px;border-bottom:1px solid rgba(30,48,72,.3);
+  font-family:'Space Mono';font-size:13px;font-weight:700;white-space:nowrap}
+table.ht tr:last-child td{border-bottom:none}
+table.ht tr:hover td{background:rgba(255,255,255,.025)}
+.hcell{display:inline-block;padding:4px 10px;border-radius:3px;min-width:50px;text-align:center}
+
+.ptbl{width:100%;border-collapse:collapse}
+.ptbl th{font-family:'Space Mono';font-size:12px;text-transform:uppercase;
+  color:var(--sub);padding:10px 12px;border-bottom:1px solid rgba(30,48,72,.7);text-align:left}
+.ptbl td{padding:9px 12px;border-bottom:1px solid rgba(30,48,72,.3);
+  font-family:'Space Mono';font-size:13px}
+.ptbl tr:last-child td{border-bottom:none}
+.ptbl tr:hover td{background:rgba(255,255,255,.02)}
+
+/* POWER */
+.prow{display:flex;align-items:center;padding:8px 0;
+  border-bottom:1px solid rgba(30,48,72,.4);gap:8px}
+.prow:last-child{border-bottom:none}
+.pnm{font-family:'Space Mono';font-size:12px;color:var(--sub);
+  width:180px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbar-t{flex:1;height:6px;background:rgba(30,48,72,.9);border-radius:3px;overflow:hidden}
+.pbar-f{height:100%;border-radius:3px;transition:width .5s}
+.pval{font-family:'Space Mono';font-size:13px;font-weight:700;width:42px;text-align:right;flex-shrink:0}
+
+.div{width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(30,48,72,.9),transparent);margin:14px 0}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  body{font-size:15px}
+  header{padding:12px 16px}
+  .logo{font-size:22px}
+  .logo em{display:none}
+  #ts{font-size:11px}
+  .wrap{padding:12px 12px}
+  .top-row{grid-template-columns:1fr;gap:12px}
+  .gauge{width:110px;height:110px}
+  .gauge-num{font-size:44px}
+  .r3{grid-template-columns:1fr}
+  .chart-toolbar{padding:10px 14px}
+  .chart-title{font-size:15px}
+  .rbtn{padding:5px 10px;font-size:11px}
+  .cbtn{padding:5px 10px;font-size:11px}
+  table.ht th,table.ht td{padding:7px 9px;font-size:12px}
+  .ptbl th,.ptbl td{padding:7px 9px;font-size:12px}
+  .inm{width:120px}
+}
+@media(max-width:480px){
+  .range-btns .rbtn:nth-child(1),
+  .range-btns .rbtn:nth-child(2){display:none}
+  .gauge{width:95px;height:95px}
+  .gauge-num{font-size:38px}
+}
+
+.r3{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+</style>
+</head>
+<body>
+
+<!-- 마우스 따라다니는 툴팁 -->
+<div id="chart-tooltip"></div>
+
+<header>
+  <span class="logo">MACRO SIGNAL <em>DASHBOARD</em></span>
+  <span id="ts">로드 중...</span>
+</header>
+
+<div class="wrap">
+
+  <!-- TOP ROW -->
+  <div class="top-row sec">
+
+    <!-- SELL -->
+    <div class="card">
+      <div class="ch"><span>매도 위험 점수</span><span id="sell-tr" style="color:var(--red);font-size:14px">─</span></div>
+      <div class="gauge-card-inner">
+        <div class="gauge-wrap">
+          <div class="gauge">
+            <svg viewBox="0 0 140 140" width="140" height="140">
+              <circle class="trk" cx="70" cy="70" r="59"/>
+              <circle class="arc" id="sell-arc" cx="70" cy="70" r="59"
+                stroke-dasharray="370.7" stroke-dashoffset="370.7" stroke="var(--red)"/>
+            </svg>
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <span class="gauge-num" id="sell-num" style="color:var(--red)">--</span>
+              <span class="gauge-sub">/100</span>
+            </div>
+          </div>
+          <div class="gauge-bars" id="sell-bars"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="card">
+      <div class="ch">
+        <span>현재 시그널</span>
+        <span id="sig-date" style="font-family:'Space Mono';font-size:12px;color:var(--sub)">--</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:18px 18px">
+        <div class="sig sHOLD" id="sig-badge">HOLD</div>
+        <div class="act" id="sig-act">--</div>
+        <div class="div"></div>
+        <div style="width:100%">
+          <div class="slbl">PROBABILITY FORECAST — 과거 전수 적중률</div>
+          <div class="htabs" id="htabs">
+            <button class="htab on" onclick="setH(1)">1주</button>
+            <button class="htab" onclick="setH(2)">2주</button>
+            <button class="htab" onclick="setH(3)">3주</button>
+            <button class="htab" onclick="setH(4)">4주</button>
+            <button class="htab" onclick="setH(5)">5주</button>
+            <button class="htab" onclick="setH(6)">6주</button>
+            <button class="htab" onclick="setH(8)">8주</button>
+          </div>
+          <div id="prob-disp"></div>
+        </div>
+        <div class="div"></div>
+        <div style="font-family:'Space Mono';font-size:12px;color:var(--sub);text-align:center">
+          금요일 확인 → 다음 주 월요일 실행
+        </div>
+      </div>
+    </div>
+
+    <!-- BUY -->
+    <div class="card">
+      <div class="ch"><span>매수 안전 점수</span><span id="buy-tr" style="color:var(--grn);font-size:14px">─</span></div>
+      <div class="gauge-card-inner">
+        <div class="gauge-wrap">
+          <div class="gauge">
+            <svg viewBox="0 0 140 140" width="140" height="140">
+              <circle class="trk" cx="70" cy="70" r="59"/>
+              <circle class="arc" id="buy-arc" cx="70" cy="70" r="59"
+                stroke-dasharray="370.7" stroke-dashoffset="370.7" stroke="var(--grn)"/>
+            </svg>
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <span class="gauge-num" id="buy-num" style="color:var(--grn)">--</span>
+              <span class="gauge-sub">/100</span>
+            </div>
+          </div>
+          <div class="gauge-bars" id="buy-bars"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN CHART -->
+  <div class="card sec">
+    <div class="chart-toolbar">
+      <div class="chart-toolbar-left">
+        <span class="chart-title">S&amp;P 500 + MACRO SIGNALS</span>
+        <div class="legend-row">
+          <span><span class="ldot" style="background:var(--red)"></span>매도위험</span>
+          <span><span class="ldot" style="background:var(--grn)"></span>매수안전</span>
+          <span><span class="ldot" style="background:#6699cc"></span>S&amp;P500</span>
+        </div>
+      </div>
+      <div class="chart-toolbar-right">
+        <div class="range-btns" id="range-btns">
+          <button class="rbtn" onclick="setRange(90,this)">3M</button>
+          <button class="rbtn" onclick="setRange(180,this)">6M</button>
+          <button class="rbtn" onclick="setRange(365,this)">1Y</button>
+          <button class="rbtn" onclick="setRange(730,this)">2Y</button>
+          <button class="rbtn" onclick="setRange(1825,this)">5Y</button>
+          <button class="rbtn on" onclick="setRange(0,this)">ALL</button>
+        </div>
+        <div class="chart-actions">
+          <button class="cbtn" onclick="zoomIn()">＋</button>
+          <button class="cbtn" onclick="zoomOut()">－</button>
+          <button class="cbtn" onclick="resetZoom()">↺</button>
+        </div>
+      </div>
+    </div>
+    <div class="chart-canvas-wrap" id="chart-canvas-wrap">
+      <canvas id="mc" height="190"></canvas>
+    </div>
+    <div class="chart-info" id="chart-info">
+      <span class="ci-empty">차트 위에 마우스를 올리면 상세 데이터가 표시됩니다</span>
+    </div>
+  </div>
+
+  <!-- 적중률 + 예측력 -->
+  <div class="r3 sec">
+    <div class="card">
+      <div class="ch"><span>점수구간별 적중률</span><span style="font-size:11px">1970년대~ 전수분석</span></div>
+      <div class="ttabs" id="ttabs">
+        <button class="ttab on" onclick="setType('sell')">매도 위험점수</button>
+        <button class="ttab" onclick="setType('buy')">매수 안전점수</button>
+      </div>
+      <div class="cb" style="padding-top:12px"><div id="prob-tbl"></div></div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <span>지표별 예측력 순위</span>
+        <span style="color:var(--sub);font-size:11px">4주후 기준</span>
+      </div>
+      <div class="cb" style="padding-top:10px"><div id="pow-list"></div></div>
+    </div>
+  </div>
+
+  <!-- 히트맵 -->
+  <div class="card sec">
+    <div class="ch"><span>적중률 히트맵</span><span style="color:var(--sub);font-size:11px">과거 전수 데이터 기반</span></div>
+    <div class="cb">
+      <div class="slbl">▼ SELL 위험점수 → N주 후 하락(-2%↓) 확률</div>
+      <div class="scroll" id="sell-hm"></div>
+      <div style="height:20px"></div>
+      <div class="slbl">▼ BUY 안전점수 → N주 후 상승(+2%↑) 확률</div>
+      <div class="scroll" id="buy-hm"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let D=null, H=1, PT='sell', MC=null;
+let ALL_LABELS=[], ALL_PRICES=[], ALL_SELL=[], ALL_BUY=[], ALL_TL_MAP={};
+let maxP=1;
+const CL=370.7;
+
+// 툴팁에 보여줄 상위 지표 (sell_detail 기준 상위 4개)
+let TOP_INDICATORS = [];
+
+async function init(){
+  try{
+    const r=await fetch('dashboard_data.json');
+    D=await r.json(); render();
+  }catch(e){
+    document.querySelector('.wrap').innerHTML=
+      '<div style="display:flex;align-items:center;justify-content:center;height:260px;'+
+      'flex-direction:column;gap:14px;font-family:Space Mono;font-size:13px">'+
+      '<div style="color:#ff3344;font-size:15px">dashboard_data.json 없음</div>'+
+      '<div style="color:#7090a8">python build_dashboard_data.py 를 먼저 실행하세요</div></div>';
+  }
+}
+
+function render(){
+  document.getElementById('ts').textContent=(D.generated_at||'').slice(0,16).replace('T',' ');
+  gauges(D.current);
+  signal(D.current);
+  buildChartData();
+  mainChart();
+  probTable();
+  powList(D.indicator_stats);
+  heatmaps(D.hit_rates);
+  // 툴팁에 보여줄 지표 상위 4개 추출
+  TOP_INDICATORS = (D.indicator_stats||[]).slice(0,4);
+}
+
+/* ── GAUGES ── */
+function gauges(cur){
+  const sell=cur.sell_score||0, buy=cur.buy_score||0;
+  const sc=sell>=72?'var(--red)':sell>=58?'var(--yel)':'var(--cyn)';
+  const bc=buy>=65?'var(--grn)':buy>=45?'var(--cyn)':'var(--mut)';
+  setGauge('sell-num','sell-arc',sell,sc);
+  setGauge('buy-num','buy-arc',buy,bc);
+  const tl=D.timeline;
+  if(tl&&tl.length>=5){
+    const ps=tl[tl.length-5]?.sell||0,cs=tl[tl.length-1]?.sell||0;
+    document.getElementById('sell-tr').textContent=cs>ps?'▲ 상승':cs<ps?'▼ 하락':'─ 보합';
+    const pb=tl[tl.length-5]?.buy||0,cb=tl[tl.length-1]?.buy||0;
+    document.getElementById('buy-tr').textContent=cb>pb?'▲ 상승':cb<pb?'▼ 하락':'─ 보합';
+  }
+  indBars('sell-bars',cur.sell_detail,'sell');
+  indBars('buy-bars', cur.buy_detail, 'buy');
+}
+function setGauge(numId,arcId,val,col){
+  document.getElementById(numId).textContent=Math.round(val);
+  document.getElementById(numId).style.color=col;
+  const a=document.getElementById(arcId);
+  a.style.strokeDashoffset=CL-(CL*val/100); a.style.stroke=col;
+}
+function indBars(id,items,t){
+  const el=document.getElementById(id); if(!el||!items) return;
+  el.innerHTML=items.slice(0,6).map(d=>{
+    const v=t==='sell'?d.danger:(d.safety||d.contrib||0);
+    const c=v>75?'var(--red)':v>55?'var(--yel)':'var(--grn)';
+    const gw=v>75?'rgba(255,51,68,.45)':v>55?'rgba(255,184,48,.4)':'rgba(0,232,122,.35)';
+    return `<div class="irow">
+      <div class="inm" title="${d.indicator}">${d.indicator.replace(/_/g,' ')}</div>
+      <div class="itrk"><div class="ifil" style="width:${v}%;background:${c};box-shadow:0 0 6px ${gw}"></div></div>
+      <div class="ival" style="color:${c}">${Math.round(v)}</div>
+      <div class="ipct">${d.percentile}%</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── SIGNAL ── */
+function signal(cur){
+  const b=document.getElementById('sig-badge');
+  b.textContent=cur.signal; b.className='sig s'+cur.signal;
+  document.getElementById('sig-act').textContent=cur.action;
+  document.getElementById('sig-date').textContent=cur.date;
+  probDisp();
+}
+function setH(h){
+  H=h;
+  document.querySelectorAll('.htab').forEach((t,i)=>t.classList.toggle('on',[1,2,3,4,5,6,8][i]===h));
+  probDisp();
+}
+function setType(t){
+  PT=t;
+  document.querySelectorAll('.ttab').forEach((el,i)=>el.classList.toggle('on',['sell','buy'][i]===t));
+  probTable();
+}
+function findBand(bands,score){return bands.find(b=>score>=b.lo&&score<b.hi)||bands[bands.length-1];}
+function probDisp(){
+  if(!D) return;
+  const sell=D.current.sell_score||0, buy=D.current.buy_score||0;
+  const hr=D.hit_rates, h=H;
+  const sb=hr?.sell?.[h]||hr?.sell?.['1']||[];
+  const bb=hr?.buy?.[h]||hr?.buy?.['1']||[];
+  const sB=findBand(sb,sell), bB=findBand(bb,buy);
+  const dn=sB?.down_prob, up=bB?.up_prob;
+  const dnR=sB?.avg_ret, upR=bB?.avg_ret;
+  const dc=dn>60?'var(--red)':dn>45?'var(--yel)':'var(--grn)';
+  const uc=up>60?'var(--grn)':up>45?'var(--cyn)':'var(--mut)';
+  document.getElementById('prob-disp').innerHTML=`
+    <div class="prob-pair">
+      <div class="pbox pbox-s">
+        <div class="pbox-lbl">${h}주 후 하락 확률</div>
+        <div class="pbox-num" style="color:${dc}">${dn!=null?dn.toFixed(1)+'%':'--'}</div>
+        <div class="pbox-sub">${dnR!=null?'avg '+dnR.toFixed(1)+'%':''}</div>
+        <div class="pbox-n">n=${sB?.n||0}</div>
+      </div>
+      <div class="pbox pbox-b">
+        <div class="pbox-lbl">${h}주 후 상승 확률</div>
+        <div class="pbox-num" style="color:${uc}">${up!=null?up.toFixed(1)+'%':'--'}</div>
+        <div class="pbox-sub">${upR!=null?'avg '+upR.toFixed(1)+'%':''}</div>
+        <div class="pbox-n">n=${bB?.n||0}</div>
+      </div>
+    </div>`;
+}
+
+/* ── CHART DATA ── */
+function buildChartData(){
+  const sp=D.sp_chart, tl=D.timeline;
+  ALL_TL_MAP={};
+  tl.forEach(t=>{ ALL_TL_MAP[t.date]=t; });
+  ALL_LABELS=sp.map(d=>d.date);
+  ALL_PRICES=sp.map(d=>d.price);
+  ALL_SELL  =sp.map(d=>ALL_TL_MAP[d.date]?.sell??null);
+  ALL_BUY   =sp.map(d=>ALL_TL_MAP[d.date]?.buy ??null);
+  maxP=Math.max(...ALL_PRICES.filter(Boolean));
+}
+
+/* ── TOOLTIP 위치 계산 ── */
+function showTooltip(x, y, idx){
+  const tip=document.getElementById('chart-tooltip');
+  const price=ALL_PRICES[idx];
+  const sell=ALL_SELL[idx];
+  const buy=ALL_BUY[idx];
+  const date=ALL_LABELS[idx]||'';
+  const tlData=ALL_TL_MAP[date];
+
+  if(!price && sell==null && buy==null){ tip.style.display='none'; return; }
+
+  const sc=sell>=72?'#ff3344':sell>=58?'#ffb830':'#00d4ff';
+  const bc=buy>=65?'#00e87a':buy>=45?'#00d4ff':'#7090a8';
+
+  // 상위 지표 수치 (sell_contributions 기준)
+  let indRows='';
+  if(tlData?.sell_contributions){
+    const contribs=tlData.sell_contributions;
+    const sorted=Object.entries(contribs).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    if(sorted.length>0){
+      indRows+=`<div class="tt-sep"></div>`;
+      sorted.forEach(([k,v])=>{
+        const pct=tlData.sell_contributions[k];
+        const col=v>10?'#ff3344':v>6?'#ffb830':'#7090a8';
+        indRows+=`<div class="tt-row">
+          <span class="tt-label">${k.replace(/_/g,' ')}</span>
+          <span class="tt-value" style="color:${col}">${v.toFixed(1)}</span>
+        </div>`;
+      });
+    }
+  }
+
+  tip.innerHTML=`
+    <div class="tt-date">${date}</div>
+    <div class="tt-row">
+      <span class="tt-label">S&amp;P 500</span>
+      <span class="tt-value" style="color:#6699cc">$${price?.toLocaleString()||'--'}</span>
+    </div>
+    <div class="tt-row">
+      <span class="tt-label">매도 위험점수</span>
+      <span class="tt-value" style="color:${sc}">${sell!=null?sell.toFixed(1):'--'}</span>
+    </div>
+    <div class="tt-row">
+      <span class="tt-label">매수 안전점수</span>
+      <span class="tt-value" style="color:${bc}">${buy!=null?buy.toFixed(1):'--'}</span>
+    </div>
+    ${indRows}`;
+
+  tip.style.display='block';
+
+  // 화면 경계 처리
+  const tw=tip.offsetWidth||200, th=tip.offsetHeight||160;
+  const vw=window.innerWidth, vh=window.innerHeight;
+  let lx=x+18, ly=y-20;
+  if(lx+tw>vw-10) lx=x-tw-14;
+  if(ly+th>vh-10) ly=vh-th-10;
+  if(ly<10) ly=10;
+  tip.style.left=lx+'px';
+  tip.style.top=ly+'px';
+}
+function hideTooltip(){ document.getElementById('chart-tooltip').style.display='none'; }
+
+/* ── MAIN CHART ── */
+function mainChart(){
+  const ctx=document.getElementById('mc').getContext('2d');
+  const pNorm=ALL_PRICES.map(p=>p?(p/maxP*100):null);
+  const grad=ctx.createLinearGradient(0,0,0,190);
+  grad.addColorStop(0,'rgba(102,153,204,.28)');
+  grad.addColorStop(1,'rgba(102,153,204,.01)');
+
+  const exitPlugin={id:'exit',beforeDatasetsDraw(chart){
+    const{ctx:c,chartArea:{left,right,top,bottom},scales:{x}}=chart;
+    c.save(); let inE=false,sx=0;
+    ALL_SELL.forEach((v,i)=>{
+      try{
+        const xp=x.getPixelForValue(i);
+        if(v>=72&&!inE){inE=true;sx=xp;}
+        if((v==null||v<72)&&inE){
+          const eg=c.createLinearGradient(sx,0,xp,0);
+          eg.addColorStop(0,'rgba(255,51,68,.0)');
+          eg.addColorStop(.5,'rgba(255,51,68,.12)');
+          eg.addColorStop(1,'rgba(255,51,68,.0)');
+          c.fillStyle=eg; c.fillRect(sx,top,xp-sx,bottom-top); inE=false;
+        }
+      }catch(e){}
+    });
+    if(inE){c.fillStyle='rgba(255,51,68,.1)';c.fillRect(sx,top,right-sx,bottom-top);}
+    c.restore();
+  }};
+
+  if(MC) MC.destroy();
+  MC=new Chart(ctx,{
+    type:'line', plugins:[exitPlugin],
+    data:{labels:ALL_LABELS, datasets:[
+      {label:'SP500', data:pNorm,
+       borderColor:'rgba(102,153,204,.9)', backgroundColor:grad,
+       borderWidth:2.5, pointRadius:0, tension:.4, fill:true, yAxisID:'y'},
+      {label:'매도', data:ALL_SELL,
+       borderColor:'rgba(255,51,68,.95)', backgroundColor:'transparent',
+       borderWidth:2, pointRadius:0, tension:.3, yAxisID:'y2'},
+      {label:'매수', data:ALL_BUY,
+       borderColor:'rgba(0,232,122,.95)', backgroundColor:'transparent',
+       borderWidth:2, pointRadius:0, tension:.3, yAxisID:'y2'},
+    ]},
+    options:{
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      animation:{duration:400},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          enabled:false,
+          external(c2){
+            // 하단 info bar 업데이트
+            if(c2.tooltip.opacity===0){
+              document.getElementById('chart-info').innerHTML=
+                '<span class="ci-empty">차트 위에 마우스를 올리면 상세 데이터가 표시됩니다</span>';
+              hideTooltip(); return;
+            }
+            const idx=c2.tooltip.dataPoints[0]?.dataIndex;
+            if(idx==null) return;
+            const p=ALL_PRICES[idx], s=ALL_SELL[idx], b=ALL_BUY[idx];
+            const sc=s>=72?'var(--red)':s>=58?'var(--yel)':'var(--cyn)';
+            const bc=b>=65?'var(--grn)':b>=45?'var(--cyn)':'var(--mut)';
+            document.getElementById('chart-info').innerHTML=`
+              <div class="ci">날짜<span>${ALL_LABELS[idx]}</span></div>
+              <div class="ci">S&amp;P500<span style="color:#6699cc">$${p?.toLocaleString()||'--'}</span></div>
+              <div class="ci">매도위험<span style="color:${sc}">${s?.toFixed(1)||'--'}</span></div>
+              <div class="ci">매수안전<span style="color:${bc}">${b?.toFixed(1)||'--'}</span></div>`;
+          }
+        },
+        zoom:{
+          zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoom(){clearRangeBtns();}},
+          pan:{enabled:true,mode:'x',onPan(){clearRangeBtns();}},
+          limits:{x:{minRange:8}},
+        }
+      },
+      scales:{
+        x:{ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
+            maxTicksLimit:14,callback:(v,i)=>ALL_LABELS[i]?.slice(0,7)||''},
+           grid:{color:'rgba(30,48,72,.4)'}},
+        y:{position:'right',ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
+            callback:v=>`$${(v/100*maxP/1000).toFixed(0)}k`},grid:{display:false}},
+        y2:{min:0,max:100,ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',stepSize:25},
+            grid:{color:'rgba(30,48,72,.4)'},border:{dash:[5,5]}}
+      },
+      onHover:(e,els,chart)=>{
+        if(!e.native) return;
+        const pts=chart.getElementsAtEventForMode(e.native,'index',{intersect:false},true);
+        if(pts.length===0){ hideTooltip(); return; }
+        const idx=pts[0].index;
+        showTooltip(e.native.clientX, e.native.clientY, idx);
+      }
+    }
+  });
+
+  // 마우스 leave 처리
+  document.getElementById('mc').addEventListener('mouseleave',()=>hideTooltip());
+}
+
+function setRange(days,btn){
+  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(days===0){MC?.resetZoom();return;}
+  const n=ALL_LABELS.length;
+  const end=new Date(ALL_LABELS[n-1]);
+  const start=new Date(end); start.setDate(start.getDate()-days);
+  const si=ALL_LABELS.findIndex(d=>new Date(d)>=start);
+  if(si<0){MC?.resetZoom();return;}
+  MC?.zoomScale('x',{min:si,max:n-1},'default');
+}
+function zoomIn(){MC?.zoom(1.3);}
+function zoomOut(){MC?.zoom(0.75);}
+function resetZoom(){
+  MC?.resetZoom();
+  document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
+  document.querySelector('#range-btns .rbtn:last-child').classList.add('on');
+}
+function clearRangeBtns(){document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));}
+
+/* ── PROB TABLE ── */
+function probTable(){
+  if(!D) return;
+  const hr=D.hit_rates, t=PT, hs=[1,2,3,4,5,6,8];
+  const bands=hr?.[t]?.['1']||[];
+  const pk=t==='sell'?'down_prob':'up_prob';
+  let h=`<table class="ptbl"><thead><tr><th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}</tr></thead><tbody>`;
+  bands.forEach(b=>{
+    h+=`<tr><td style="color:#fff;font-weight:700;font-size:14px">${b.band}<br>
+      <span style="color:var(--mut);font-size:11px">${b.lo}~${b.hi}</span></td>`;
+    hs.forEach(x=>{
+      const hb=hr?.[t]?.[x]||[], m=hb.find(q=>q.lo===b.lo&&q.hi===b.hi), p=m?.[pk];
+      if(p==null){h+=`<td style="color:var(--mut)">—</td>`;return;}
+      const col=t==='sell'?(p>60?'var(--red)':p>45?'var(--yel)':'var(--grn)')
+                          :(p>60?'var(--grn)':p>45?'var(--cyn)':'var(--mut)');
+      const bg=t==='sell'?(p>60?'rgba(255,51,68,.2)':p>45?'rgba(255,184,48,.15)':'rgba(0,232,122,.12)')
+                         :(p>60?'rgba(0,232,122,.2)':p>45?'rgba(0,212,255,.15)':'transparent');
+      h+=`<td><span class="hcell" style="color:${col};background:${bg};border:1px solid ${col}40;font-size:13px">${p.toFixed(0)}%</span></td>`;
+    });
+    h+=`</tr>`;
+  });
+  document.getElementById('prob-tbl').innerHTML=h+'</tbody></table>';
+}
+
+/* ── HEATMAPS ── */
+function heatmaps(hr){if(!hr)return;buildHM('sell-hm',hr.sell,'down_prob','sell');buildHM('buy-hm',hr.buy,'up_prob','buy');}
+function buildHM(id,data,pk,t){
+  const el=document.getElementById(id); if(!el||!data) return;
+  const hs=[1,2,3,4,5,6,8], bands=data['1']||[];
+  let h=`<table class="ht"><thead><tr><th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}<th>n</th></tr></thead><tbody>`;
+  bands.slice().reverse().forEach(b=>{
+    h+=`<tr><td style="color:#fff;font-weight:700;font-size:14px">${b.band}<br>
+      <span style="color:var(--mut);font-size:11px">${b.lo}~${b.hi}</span></td>`;
+    hs.forEach(x=>{
+      const hb=data[x]||[], m=hb.find(q=>q.lo===b.lo&&q.hi===b.hi), p=m?.[pk];
+      if(p==null){h+=`<td style="color:var(--mut)">—</td>`;return;}
+      const col=t==='sell'?(p>65?'var(--red)':p>50?'var(--yel)':'var(--grn)')
+                          :(p>65?'var(--grn)':p>50?'var(--cyn)':'var(--sub)');
+      const bg=t==='sell'?(p>65?'rgba(255,51,68,.22)':p>50?'rgba(255,184,48,.16)':'rgba(0,232,122,.12)')
+                         :(p>65?'rgba(0,232,122,.22)':p>50?'rgba(0,212,255,.16)':'transparent');
+      h+=`<td style="background:${bg}"><span style="color:${col};font-size:14px;font-weight:700">${p.toFixed(0)}%</span></td>`;
+    });
+    h+=`<td style="color:var(--mut);font-size:12px">${b.n}</td></tr>`;
+  });
+  el.innerHTML=h+'</tbody></table>';
+}
+
+/* ── POWER LIST ── */
+function powList(stats){
+  const el=document.getElementById('pow-list'); if(!el||!stats) return;
+  const top=stats.slice(0,12), mx=Math.max(...top.map(s=>s.predictive_power||0));
+  el.innerHTML=top.map(s=>{
+    const pw=s.predictive_power||0, w=mx>0?(pw/mx*100):0;
+    const c=s.score_type==='sell'?'var(--red)':'var(--grn)';
+    const gw=s.score_type==='sell'?'rgba(255,51,68,.35)':'rgba(0,232,122,.35)';
+    return `<div class="prow">
+      <div class="pnm" title="${s.indicator}" style="color:#fff">
+        ${s.indicator.replace(/_/g,' ')}
+        <span style="font-size:11px;color:${c}">[${s.score_type==='sell'?'S':'B'}]</span>
+      </div>
+      <div class="pbar-t"><div class="pbar-f" style="width:${w}%;background:${c};box-shadow:0 0 5px ${gw}"></div></div>
+      <div class="pval" style="color:${c}">${pw.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+}
+
+init();
+</script>
+</body>
+</html>
