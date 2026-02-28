@@ -59,12 +59,13 @@ header{
   flex-wrap:wrap;gap:6px}
 .cb{padding:16px 18px}
 
-/* ── TOP ROW ── */
+/* ── TOP ROW (데스크탑: 3칸) ── */
 .top-row{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:14px}
 
 /* ── GAUGE ── */
 .gauge-card-inner{padding:18px 16px 14px}
-.gauge-wrap{display:flex;align-items:center;gap:16px}
+/* 데스크탑: 게이지 왼쪽, 바 오른쪽 */
+.gauge-wrap{display:flex;align-items:flex-start;gap:16px}
 .gauge{position:relative;width:140px;height:140px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .gauge svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
@@ -74,7 +75,7 @@ header{
   filter:drop-shadow(0 0 6px currentColor)}
 .gauge-num{font-family:'Bebas Neue';font-size:56px;line-height:1;z-index:1}
 .gauge-sub{font-family:'Space Mono';font-size:13px;color:var(--mut);z-index:1}
-.gauge-bars{flex:1;min-width:0}
+.gauge-bars{flex:1;min-width:0;padding-top:4px}
 
 /* ── SIGNAL ── */
 .sig{padding:9px 26px;border-radius:4px;font-family:'Bebas Neue';
@@ -106,7 +107,7 @@ header{
   box-shadow:0 0 6px rgba(0,212,255,.2)}
 .htab:hover:not(.on){color:#fff}
 
-.ttabs{display:flex;gap:5px;padding:10px 16px 0}
+.ttabs{display:flex;gap:5px;padding:10px 16px 0;flex-wrap:wrap}
 .ttab{padding:7px 18px;font-family:'Space Mono';font-size:12px;
   border:1px solid var(--bdr);border-radius:3px;cursor:pointer;
   background:transparent;color:var(--sub);transition:all .15s;touch-action:manipulation}
@@ -135,7 +136,7 @@ header{
 }
 .chart-toolbar-left{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .chart-title{font-family:'Bebas Neue';font-size:18px;letter-spacing:3px;color:var(--sub)}
-.legend-row{display:flex;gap:14px;align-items:center}
+.legend-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .legend-row span{font-size:14px;display:flex;align-items:center;gap:6px;color:#fff}
 .ldot{display:inline-block;width:10px;height:10px;border-radius:50%}
 
@@ -158,13 +159,13 @@ header{
 .chart-canvas-wrap{position:relative;padding:12px 16px 8px;cursor:crosshair}
 .chart-canvas-wrap:active{cursor:grabbing}
 
-/* ── 마우스 따라다니는 TOOLTIP ── */
+/* ── 마우스/터치 TOOLTIP ── */
 #chart-tooltip{
   position:fixed;
   pointer-events:none;
   z-index:9999;
   display:none;
-  min-width:200px;
+  min-width:190px;
   background:rgba(8,14,24,.97);
   border:1px solid rgba(30,48,72,.9);
   border-radius:6px;
@@ -185,7 +186,7 @@ header{
 .tt-value{font-family:'Space Mono';font-size:12px;font-weight:700;white-space:nowrap}
 .tt-sep{height:1px;background:rgba(30,48,72,.6);margin:6px 0}
 
-/* INFO BAR (하단) */
+/* INFO BAR */
 .chart-info{
   display:flex;gap:20px;align-items:center;flex-wrap:wrap;
   padding:8px 18px;border-top:1px solid rgba(30,48,72,.4);
@@ -195,8 +196,21 @@ header{
 .ci span{font-weight:700;margin-left:4px}
 .ci-empty{font-family:'Space Mono';font-size:12px;color:var(--mut)}
 
+/* ── 스크롤 가능한 테이블 래퍼 ── */
+/* 4번 요청: 모든 표에 가로 스크롤 적용 */
+.scroll{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  /* 스크롤바 꾸미기 */
+  scrollbar-width:thin;
+  scrollbar-color:rgba(30,48,72,.8) transparent;
+}
+.scroll::-webkit-scrollbar{height:4px}
+.scroll::-webkit-scrollbar-track{background:transparent}
+.scroll::-webkit-scrollbar-thumb{background:rgba(30,48,72,.9);border-radius:2px}
+
 /* TABLES */
-table.ht{width:100%;border-collapse:collapse}
+table.ht{border-collapse:collapse;min-width:520px}/* 최소 너비 → 스크롤 유도 */
 table.ht th{font-family:'Space Mono';font-size:12px;letter-spacing:1px;
   text-transform:uppercase;color:var(--sub);padding:10px 12px;
   border-bottom:1px solid rgba(30,48,72,.7);text-align:left;white-space:nowrap}
@@ -206,11 +220,12 @@ table.ht tr:last-child td{border-bottom:none}
 table.ht tr:hover td{background:rgba(255,255,255,.025)}
 .hcell{display:inline-block;padding:4px 10px;border-radius:3px;min-width:50px;text-align:center}
 
-.ptbl{width:100%;border-collapse:collapse}
+.ptbl{border-collapse:collapse;min-width:520px}
 .ptbl th{font-family:'Space Mono';font-size:12px;text-transform:uppercase;
-  color:var(--sub);padding:10px 12px;border-bottom:1px solid rgba(30,48,72,.7);text-align:left}
+  color:var(--sub);padding:10px 12px;border-bottom:1px solid rgba(30,48,72,.7);
+  text-align:left;white-space:nowrap}
 .ptbl td{padding:9px 12px;border-bottom:1px solid rgba(30,48,72,.3);
-  font-family:'Space Mono';font-size:13px}
+  font-family:'Space Mono';font-size:13px;white-space:nowrap}
 .ptbl tr:last-child td{border-bottom:none}
 .ptbl tr:hover td{background:rgba(255,255,255,.02)}
 
@@ -226,33 +241,83 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
 
 .div{width:100%;height:1px;
   background:linear-gradient(90deg,transparent,rgba(30,48,72,.9),transparent);margin:14px 0}
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
-/* ── MOBILE ── */
+/* ══════════════════════
+   MOBILE (768px 이하)
+══════════════════════ */
 @media(max-width:768px){
   body{font-size:15px}
   header{padding:12px 16px}
   .logo{font-size:22px}
   .logo em{display:none}
   #ts{font-size:11px}
-  .wrap{padding:12px 12px}
-  .top-row{grid-template-columns:1fr;gap:12px}
-  .gauge{width:110px;height:110px}
-  .gauge-num{font-size:44px}
+  .wrap{padding:10px 12px}
+  .sec{margin-bottom:12px}
+
+  /* 2번 요청: 모바일 순서 → 시그널 맨 위, 매수, 매도 순 */
+  /* grid 사용해서 order로 순서 변경 */
+  .top-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  #card-sell{order:3}
+  #card-center{order:1}
+  #card-buy{order:2}
+
+  /* 1번 요청: 게이지 겹침 해결 */
+  /* 게이지를 위에, 바를 아래에 세로 배치 */
+  .gauge-card-inner{padding:14px 16px 14px}
+  .gauge-wrap{
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  .gauge{
+    width:120px;height:120px;
+    flex-shrink:0;
+  }
+  .gauge-num{font-size:48px}
+  .gauge-bars{
+    width:100%;
+    padding-top:0;
+  }
+  /* inm 너비 조정 */
+  .inm{width:130px;font-size:10px}
+  .ival{font-size:12px}
+  .ipct{font-size:10px}
+
+  /* 하단 그리드 1열 */
   .r3{grid-template-columns:1fr}
-  .chart-toolbar{padding:10px 14px}
-  .chart-title{font-size:15px}
+
+  /* 차트 툴바 */
+  .chart-toolbar{padding:10px 12px;gap:6px}
+  .chart-title{font-size:14px}
+  .legend-row span{font-size:12px}
   .rbtn{padding:5px 10px;font-size:11px}
   .cbtn{padding:5px 10px;font-size:11px}
-  table.ht th,table.ht td{padding:7px 9px;font-size:12px}
-  .ptbl th,.ptbl td{padding:7px 9px;font-size:12px}
-  .inm{width:120px}
+  .chart-canvas-wrap{padding:8px 10px 4px}
+
+  /* info bar */
+  .chart-info{gap:10px;padding:7px 12px;flex-direction:column;align-items:flex-start}
+  .ci{font-size:12px}
+
+  /* 테이블 */
+  table.ht th,table.ht td{padding:7px 10px;font-size:12px}
+  .ptbl th,.ptbl td{padding:7px 10px;font-size:12px}
+
+  /* pbox */
+  .pbox-num{font-size:38px}
+  .pbox-lbl{font-size:10px}
 }
+
 @media(max-width:480px){
+  /* 3M, 6M 숨김 */
   .range-btns .rbtn:nth-child(1),
   .range-btns .rbtn:nth-child(2){display:none}
-  .gauge{width:95px;height:95px}
-  .gauge-num{font-size:38px}
+  .gauge{width:110px;height:110px}
+  .gauge-num{font-size:42px}
+  .inm{width:110px}
 }
 
 .r3{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -260,7 +325,7 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
 </head>
 <body>
 
-<!-- 마우스 따라다니는 툴팁 -->
+<!-- 툴팁 -->
 <div id="chart-tooltip"></div>
 
 <header>
@@ -270,12 +335,15 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
 
 <div class="wrap">
 
-  <!-- TOP ROW -->
+  <!-- TOP ROW: 데스크탑=SELL|CENTER|BUY / 모바일=CENTER,BUY,SELL 순 -->
   <div class="top-row sec">
 
-    <!-- SELL -->
-    <div class="card">
-      <div class="ch"><span>매도 위험 점수</span><span id="sell-tr" style="color:var(--red);font-size:14px">─</span></div>
+    <!-- SELL (모바일에서 order:3) -->
+    <div class="card" id="card-sell">
+      <div class="ch">
+        <span>매도 위험 점수</span>
+        <span id="sell-tr" style="color:var(--red);font-size:14px">─</span>
+      </div>
       <div class="gauge-card-inner">
         <div class="gauge-wrap">
           <div class="gauge">
@@ -294,19 +362,19 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
       </div>
     </div>
 
-    <!-- CENTER -->
-    <div class="card">
+    <!-- CENTER (모바일에서 order:1) -->
+    <div class="card" id="card-center">
       <div class="ch">
         <span>현재 시그널</span>
         <span id="sig-date" style="font-family:'Space Mono';font-size:12px;color:var(--sub)">--</span>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:center;padding:18px 18px">
+      <div style="display:flex;flex-direction:column;align-items:center;padding:18px">
         <div class="sig sHOLD" id="sig-badge">HOLD</div>
         <div class="act" id="sig-act">--</div>
         <div class="div"></div>
         <div style="width:100%">
           <div class="slbl">PROBABILITY FORECAST — 과거 전수 적중률</div>
-          <div class="htabs" id="htabs">
+          <div class="htabs">
             <button class="htab on" onclick="setH(1)">1주</button>
             <button class="htab" onclick="setH(2)">2주</button>
             <button class="htab" onclick="setH(3)">3주</button>
@@ -324,9 +392,12 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
       </div>
     </div>
 
-    <!-- BUY -->
-    <div class="card">
-      <div class="ch"><span>매수 안전 점수</span><span id="buy-tr" style="color:var(--grn);font-size:14px">─</span></div>
+    <!-- BUY (모바일에서 order:2) -->
+    <div class="card" id="card-buy">
+      <div class="ch">
+        <span>매수 안전 점수</span>
+        <span id="buy-tr" style="color:var(--grn);font-size:14px">─</span>
+      </div>
       <div class="gauge-card-inner">
         <div class="gauge-wrap">
           <div class="gauge">
@@ -345,7 +416,7 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
       </div>
     </div>
 
-  </div>
+  </div><!-- /top-row -->
 
   <!-- MAIN CHART -->
   <div class="card sec">
@@ -378,34 +449,46 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
       <canvas id="mc" height="190"></canvas>
     </div>
     <div class="chart-info" id="chart-info">
-      <span class="ci-empty">차트 위에 마우스를 올리면 상세 데이터가 표시됩니다</span>
+      <span class="ci-empty">차트 위에 마우스/터치를 올리면 상세 데이터가 표시됩니다</span>
     </div>
   </div>
 
   <!-- 적중률 + 예측력 -->
   <div class="r3 sec">
     <div class="card">
-      <div class="ch"><span>점수구간별 적중률</span><span style="font-size:11px">1970년대~ 전수분석</span></div>
-      <div class="ttabs" id="ttabs">
-        <button class="ttab on" onclick="setType('sell')">매도 위험점수</button>
-        <button class="ttab" onclick="setType('buy')">매수 안전점수</button>
+      <div class="ch">
+        <span>점수구간별 적중률</span>
+        <span style="font-size:11px">1970년대~ 전수분석</span>
       </div>
-      <div class="cb" style="padding-top:12px"><div id="prob-tbl"></div></div>
+      <div class="ttabs">
+        <button class="ttab on" onclick="setType('sell')">매도</button>
+        <button class="ttab" onclick="setType('buy')">매수</button>
+      </div>
+      <!-- 4번 요청: scroll 클래스로 가로 스크롤 -->
+      <div class="cb" style="padding-top:12px">
+        <div class="scroll"><div id="prob-tbl"></div></div>
+      </div>
     </div>
     <div class="card">
       <div class="ch">
         <span>지표별 예측력 순위</span>
         <span style="color:var(--sub);font-size:11px">4주후 기준</span>
       </div>
-      <div class="cb" style="padding-top:10px"><div id="pow-list"></div></div>
+      <div class="cb" style="padding-top:10px">
+        <div id="pow-list"></div>
+      </div>
     </div>
   </div>
 
   <!-- 히트맵 -->
   <div class="card sec">
-    <div class="ch"><span>적중률 히트맵</span><span style="color:var(--sub);font-size:11px">과거 전수 데이터 기반</span></div>
+    <div class="ch">
+      <span>적중률 히트맵</span>
+      <span style="color:var(--sub);font-size:11px">과거 전수 데이터 기반</span>
+    </div>
     <div class="cb">
       <div class="slbl">▼ SELL 위험점수 → N주 후 하락(-2%↓) 확률</div>
+      <!-- 4번 요청: 히트맵도 가로 스크롤 -->
       <div class="scroll" id="sell-hm"></div>
       <div style="height:20px"></div>
       <div class="slbl">▼ BUY 안전점수 → N주 후 상승(+2%↑) 확률</div>
@@ -413,16 +496,13 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     </div>
   </div>
 
-</div>
+</div><!-- /wrap -->
 
 <script>
 let D=null, H=1, PT='sell', MC=null;
 let ALL_LABELS=[], ALL_PRICES=[], ALL_SELL=[], ALL_BUY=[], ALL_TL_MAP={};
 let maxP=1;
 const CL=370.7;
-
-// 툴팁에 보여줄 상위 지표 (sell_detail 기준 상위 4개)
-let TOP_INDICATORS = [];
 
 async function init(){
   try{
@@ -446,8 +526,6 @@ function render(){
   probTable();
   powList(D.indicator_stats);
   heatmaps(D.hit_rates);
-  // 툴팁에 보여줄 지표 상위 4개 추출
-  TOP_INDICATORS = (D.indicator_stats||[]).slice(0,4);
 }
 
 /* ── GAUGES ── */
@@ -459,9 +537,9 @@ function gauges(cur){
   setGauge('buy-num','buy-arc',buy,bc);
   const tl=D.timeline;
   if(tl&&tl.length>=5){
-    const ps=tl[tl.length-5]?.sell||0,cs=tl[tl.length-1]?.sell||0;
+    const ps=tl[tl.length-5]?.sell||0, cs=tl[tl.length-1]?.sell||0;
     document.getElementById('sell-tr').textContent=cs>ps?'▲ 상승':cs<ps?'▼ 하락':'─ 보합';
-    const pb=tl[tl.length-5]?.buy||0,cb=tl[tl.length-1]?.buy||0;
+    const pb=tl[tl.length-5]?.buy||0, cb=tl[tl.length-1]?.buy||0;
     document.getElementById('buy-tr').textContent=cb>pb?'▲ 상승':cb<pb?'▼ 하락':'─ 보합';
   }
   indBars('sell-bars',cur.sell_detail,'sell');
@@ -471,7 +549,8 @@ function setGauge(numId,arcId,val,col){
   document.getElementById(numId).textContent=Math.round(val);
   document.getElementById(numId).style.color=col;
   const a=document.getElementById(arcId);
-  a.style.strokeDashoffset=CL-(CL*val/100); a.style.stroke=col;
+  a.style.strokeDashoffset=CL-(CL*val/100);
+  a.style.stroke=col;
 }
 function indBars(id,items,t){
   const el=document.getElementById(id); if(!el||!items) return;
@@ -498,15 +577,19 @@ function signal(cur){
 }
 function setH(h){
   H=h;
-  document.querySelectorAll('.htab').forEach((t,i)=>t.classList.toggle('on',[1,2,3,4,5,6,8][i]===h));
+  document.querySelectorAll('.htab').forEach((t,i)=>
+    t.classList.toggle('on',[1,2,3,4,5,6,8][i]===h));
   probDisp();
 }
 function setType(t){
   PT=t;
-  document.querySelectorAll('.ttab').forEach((el,i)=>el.classList.toggle('on',['sell','buy'][i]===t));
+  document.querySelectorAll('.ttab').forEach((el,i)=>
+    el.classList.toggle('on',['sell','buy'][i]===t));
   probTable();
 }
-function findBand(bands,score){return bands.find(b=>score>=b.lo&&score<b.hi)||bands[bands.length-1];}
+function findBand(bands,score){
+  return bands.find(b=>score>=b.lo&&score<b.hi)||bands[bands.length-1];
+}
 function probDisp(){
   if(!D) return;
   const sell=D.current.sell_score||0, buy=D.current.buy_score||0;
@@ -547,7 +630,9 @@ function buildChartData(){
   maxP=Math.max(...ALL_PRICES.filter(Boolean));
 }
 
-/* ── TOOLTIP 위치 계산 ── */
+/* ── TOOLTIP ── */
+let tooltipVisible=false;
+
 function showTooltip(x, y, idx){
   const tip=document.getElementById('chart-tooltip');
   const price=ALL_PRICES[idx];
@@ -556,20 +641,16 @@ function showTooltip(x, y, idx){
   const date=ALL_LABELS[idx]||'';
   const tlData=ALL_TL_MAP[date];
 
-  if(!price && sell==null && buy==null){ tip.style.display='none'; return; }
-
   const sc=sell>=72?'#ff3344':sell>=58?'#ffb830':'#00d4ff';
   const bc=buy>=65?'#00e87a':buy>=45?'#00d4ff':'#7090a8';
 
-  // 상위 지표 수치 (sell_contributions 기준)
   let indRows='';
   if(tlData?.sell_contributions){
-    const contribs=tlData.sell_contributions;
-    const sorted=Object.entries(contribs).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const sorted=Object.entries(tlData.sell_contributions)
+      .sort((a,b)=>b[1]-a[1]).slice(0,4);
     if(sorted.length>0){
       indRows+=`<div class="tt-sep"></div>`;
       sorted.forEach(([k,v])=>{
-        const pct=tlData.sell_contributions[k];
         const col=v>10?'#ff3344':v>6?'#ffb830':'#7090a8';
         indRows+=`<div class="tt-row">
           <span class="tt-label">${k.replace(/_/g,' ')}</span>
@@ -596,8 +677,8 @@ function showTooltip(x, y, idx){
     ${indRows}`;
 
   tip.style.display='block';
+  tooltipVisible=true;
 
-  // 화면 경계 처리
   const tw=tip.offsetWidth||200, th=tip.offsetHeight||160;
   const vw=window.innerWidth, vh=window.innerHeight;
   let lx=x+18, ly=y-20;
@@ -607,7 +688,35 @@ function showTooltip(x, y, idx){
   tip.style.left=lx+'px';
   tip.style.top=ly+'px';
 }
-function hideTooltip(){ document.getElementById('chart-tooltip').style.display='none'; }
+
+function hideTooltip(){
+  document.getElementById('chart-tooltip').style.display='none';
+  tooltipVisible=false;
+}
+
+/* 3번 요청: 차트 바깥 터치/클릭 시 툴팁 숨기기 */
+document.addEventListener('touchstart', function(e){
+  if(!tooltipVisible) return;
+  const canvas=document.getElementById('mc');
+  const tip=document.getElementById('chart-tooltip');
+  if(!canvas.contains(e.target) && !tip.contains(e.target)){
+    hideTooltip();
+    // 하단 info bar도 초기화
+    document.getElementById('chart-info').innerHTML=
+      '<span class="ci-empty">차트 위에 마우스/터치를 올리면 상세 데이터가 표시됩니다</span>';
+  }
+},{passive:true});
+
+document.addEventListener('click', function(e){
+  if(!tooltipVisible) return;
+  const canvas=document.getElementById('mc');
+  const tip=document.getElementById('chart-tooltip');
+  if(!canvas.contains(e.target) && !tip.contains(e.target)){
+    hideTooltip();
+    document.getElementById('chart-info').innerHTML=
+      '<span class="ci-empty">차트 위에 마우스/터치를 올리면 상세 데이터가 표시됩니다</span>';
+  }
+});
 
 /* ── MAIN CHART ── */
 function mainChart(){
@@ -660,11 +769,10 @@ function mainChart(){
         tooltip:{
           enabled:false,
           external(c2){
-            // 하단 info bar 업데이트
             if(c2.tooltip.opacity===0){
-              document.getElementById('chart-info').innerHTML=
-                '<span class="ci-empty">차트 위에 마우스를 올리면 상세 데이터가 표시됩니다</span>';
-              hideTooltip(); return;
+              // 마우스 leave 시에는 숨기지 않음 — 터치 때문에
+              // mouseleave 이벤트로 따로 처리
+              return;
             }
             const idx=c2.tooltip.dataPoints[0]?.dataIndex;
             if(idx==null) return;
@@ -696,14 +804,18 @@ function mainChart(){
       onHover:(e,els,chart)=>{
         if(!e.native) return;
         const pts=chart.getElementsAtEventForMode(e.native,'index',{intersect:false},true);
-        if(pts.length===0){ hideTooltip(); return; }
+        if(pts.length===0){
+          // 마우스만 숨기기 (터치는 유지)
+          if(e.native.type==='mousemove'||e.native.type==='mouseout') hideTooltip();
+          return;
+        }
         const idx=pts[0].index;
         showTooltip(e.native.clientX, e.native.clientY, idx);
       }
     }
   });
 
-  // 마우스 leave 처리
+  // 마우스 leave만 숨기기 (터치는 유지)
   document.getElementById('mc').addEventListener('mouseleave',()=>hideTooltip());
 }
 
@@ -733,7 +845,9 @@ function probTable(){
   const hr=D.hit_rates, t=PT, hs=[1,2,3,4,5,6,8];
   const bands=hr?.[t]?.['1']||[];
   const pk=t==='sell'?'down_prob':'up_prob';
-  let h=`<table class="ptbl"><thead><tr><th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}</tr></thead><tbody>`;
+  let h=`<table class="ptbl"><thead><tr>
+    <th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}
+  </tr></thead><tbody>`;
   bands.forEach(b=>{
     h+=`<tr><td style="color:#fff;font-weight:700;font-size:14px">${b.band}<br>
       <span style="color:var(--mut);font-size:11px">${b.lo}~${b.hi}</span></td>`;
@@ -752,11 +866,17 @@ function probTable(){
 }
 
 /* ── HEATMAPS ── */
-function heatmaps(hr){if(!hr)return;buildHM('sell-hm',hr.sell,'down_prob','sell');buildHM('buy-hm',hr.buy,'up_prob','buy');}
+function heatmaps(hr){
+  if(!hr) return;
+  buildHM('sell-hm',hr.sell,'down_prob','sell');
+  buildHM('buy-hm',hr.buy,'up_prob','buy');
+}
 function buildHM(id,data,pk,t){
   const el=document.getElementById(id); if(!el||!data) return;
   const hs=[1,2,3,4,5,6,8], bands=data['1']||[];
-  let h=`<table class="ht"><thead><tr><th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}<th>n</th></tr></thead><tbody>`;
+  let h=`<table class="ht"><thead><tr>
+    <th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}<th>n</th>
+  </tr></thead><tbody>`;
   bands.slice().reverse().forEach(b=>{
     h+=`<tr><td style="color:#fff;font-weight:700;font-size:14px">${b.band}<br>
       <span style="color:var(--mut);font-size:11px">${b.lo}~${b.hi}</span></td>`;
