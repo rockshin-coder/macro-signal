@@ -66,15 +66,20 @@ header{
 .gauge-card-inner{padding:18px 16px 14px}
 /* 데스크탑: 게이지 왼쪽, 바 오른쪽 */
 .gauge-wrap{display:flex;align-items:flex-start;gap:16px}
-.gauge{position:relative;width:140px;height:140px;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gauge{position:relative;width:140px;height:140px;flex-shrink:0}
 .gauge svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
 .gauge .trk{fill:none;stroke:rgba(30,48,72,.9);stroke-width:11}
 .gauge .arc{fill:none;stroke-width:11;stroke-linecap:round;
   transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1),stroke .3s;
   filter:drop-shadow(0 0 6px currentColor)}
-.gauge-num{font-family:'Bebas Neue';font-size:56px;line-height:1;z-index:1}
-.gauge-sub{font-family:'Space Mono';font-size:13px;color:var(--mut);z-index:1}
+/* 숫자 완벽 중앙 — position:absolute로 SVG 위에 정확히 올림 */
+.gauge-center{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.gauge-num{font-family:'Bebas Neue';font-size:56px;line-height:1}
+.gauge-sub{font-family:'Space Mono';font-size:13px;color:var(--mut);margin-top:1px}
 .gauge-bars{flex:1;min-width:0;padding-top:4px}
 
 /* ── SIGNAL ── */
@@ -196,6 +201,55 @@ header{
 .ci span{font-weight:700;margin-left:4px}
 .ci-empty{font-family:'Space Mono';font-size:12px;color:var(--mut)}
 
+/* ── 크로스 전용 툴팁 ── */
+#cross-tooltip{
+  position:fixed;pointer-events:none;z-index:9100;display:none;
+  min-width:255px;max-width:310px;
+  background:rgba(5,10,18,.98);border-radius:8px;overflow:hidden;
+  box-shadow:0 16px 48px rgba(0,0,0,.85),0 0 0 1px rgba(255,255,255,.07);
+  backdrop-filter:blur(16px);
+}
+.ct-head{
+  padding:11px 16px;font-family:'Bebas Neue';font-size:17px;letter-spacing:3px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ct-body{padding:10px 16px 14px}
+.ct-row{display:flex;justify-content:space-between;align-items:baseline;
+  padding:4px 0;font-family:'Space Mono';font-size:11px;}
+.ct-lbl{color:var(--mut)}
+.ct-val{font-weight:700}
+.ct-sep{height:1px;background:rgba(30,48,72,.6);margin:8px 0}
+.ct-stat{
+  font-family:'Space Mono';font-size:10px;color:var(--sub);
+  line-height:1.7;
+  padding:8px 10px;border-radius:4px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+}
+.ct-warn{font-family:'Space Mono';font-size:10px;color:rgba(255,184,48,.7);margin-top:6px}
+
+/* 파동 스프레드 테이블 */
+.wave-wrap{border-bottom:1px solid rgba(30,48,72,.5)}
+.wave-head{
+  padding:10px 18px;background:rgba(0,212,255,.05);
+  font-family:'Space Mono';font-size:11px;letter-spacing:2px;
+  color:var(--cyn);text-transform:uppercase;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;
+}
+.wave-head small{color:var(--mut);font-size:10px;text-transform:none;letter-spacing:0}
+table.wtbl{width:100%;border-collapse:collapse;min-width:440px}
+table.wtbl th{
+  font-family:'Space Mono';font-size:11px;color:var(--mut);
+  padding:8px 14px;border-bottom:1px solid rgba(30,48,72,.5);
+  text-align:left;white-space:nowrap;background:rgba(0,0,0,.1);
+}
+table.wtbl td{padding:9px 14px;border-bottom:1px solid rgba(30,48,72,.2);
+  font-family:'Space Mono';font-size:12px;white-space:nowrap;}
+table.wtbl tr:last-child td{border-bottom:none}
+table.wtbl tr.wbest td{background:rgba(0,212,255,.05)}
+.wbadge{display:inline-block;padding:3px 9px;border-radius:3px;
+  font-size:11px;font-family:'Space Mono';font-weight:700;}
+.wnote{font-size:10px;color:var(--mut)}
+
 /* ── 스크롤 가능한 테이블 래퍼 ── */
 /* 4번 요청: 모든 표에 가로 스크롤 적용 */
 .scroll{
@@ -277,7 +331,8 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     width:120px;height:120px;
     flex-shrink:0;
   }
-  .gauge-num{font-size:48px}
+  .gauge-num{font-size:44px}
+  .gauge-sub{font-size:12px}
   .gauge-bars{
     width:100%;
     padding-top:0;
@@ -327,6 +382,7 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
 
 <!-- 툴팁 -->
 <div id="chart-tooltip"></div>
+<div id="cross-tooltip"></div>
 
 <header>
   <span class="logo">MACRO SIGNAL <em>DASHBOARD</em></span>
@@ -352,7 +408,7 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
               <circle class="arc" id="sell-arc" cx="70" cy="70" r="59"
                 stroke-dasharray="370.7" stroke-dashoffset="370.7" stroke="var(--red)"/>
             </svg>
-            <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="gauge-center">
               <span class="gauge-num" id="sell-num" style="color:var(--red)">--</span>
               <span class="gauge-sub">/100</span>
             </div>
@@ -406,7 +462,7 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
               <circle class="arc" id="buy-arc" cx="70" cy="70" r="59"
                 stroke-dasharray="370.7" stroke-dashoffset="370.7" stroke="var(--grn)"/>
             </svg>
-            <div style="display:flex;flex-direction:column;align-items:center">
+            <div class="gauge-center">
               <span class="gauge-num" id="buy-num" style="color:var(--grn)">--</span>
               <span class="gauge-sub">/100</span>
             </div>
@@ -427,6 +483,8 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
           <span><span class="ldot" style="background:var(--red)"></span>매도위험</span>
           <span><span class="ldot" style="background:var(--grn)"></span>매수안전</span>
           <span><span class="ldot" style="background:#6699cc"></span>S&amp;P500</span>
+          <span><span class="ldot" style="background:rgba(0,212,255,.85);border:2px solid var(--cyn);box-shadow:0 0 5px var(--cyn)"></span>TYPE1↓</span>
+          <span><span class="ldot" style="background:rgba(255,51,68,.85);border:2px solid var(--red);box-shadow:0 0 5px var(--red)"></span>TYPE2↑</span>
         </div>
       </div>
       <div class="chart-toolbar-right">
@@ -456,6 +514,71 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
   <!-- 적중률 + 예측력 -->
   <div class="r3 sec">
     <div class="card">
+      <!-- ★ 파동 스프레드 테이블 -->
+      <div class="wave-wrap">
+        <div class="wave-head">
+          ⚡ TYPE1 크로스 — 파동 최대 스프레드별 8주 성과
+          <small>1986~현재 전수분석</small>
+        </div>
+        <div class="scroll">
+          <table class="wtbl">
+            <thead>
+              <tr>
+                <th>구간 최대 스프레드</th>
+                <th>8주 평균수익</th>
+                <th>상승확률</th>
+                <th>샘플</th>
+                <th>평가</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--sub)">0 ~ 10pt</td>
+                <td style="color:var(--grn);font-weight:700">+3.2%</td>
+                <td><span class="wbadge" style="background:rgba(0,232,122,.12);color:var(--grn);border:1px solid rgba(0,232,122,.3)">87.5%</span></td>
+                <td class="wnote">n=8</td>
+                <td class="wnote" style="color:var(--yel)">샘플 너무 적음</td>
+              </tr>
+              <tr>
+                <td style="color:var(--sub)">10 ~ 20pt</td>
+                <td style="color:var(--mut);font-weight:700">+0.6%</td>
+                <td><span class="wbadge" style="background:rgba(255,51,68,.12);color:var(--red);border:1px solid rgba(255,51,68,.3)">45.8%</span></td>
+                <td class="wnote">n=24</td>
+                <td class="wnote" style="color:var(--red)">노이즈 ⚠️</td>
+              </tr>
+              <tr class="wbest">
+                <td style="color:#fff;font-weight:700">20 ~ 30pt</td>
+                <td style="color:var(--grn);font-weight:700">+3.4%</td>
+                <td><span class="wbadge" style="background:rgba(0,212,255,.18);color:var(--cyn);border:1px solid rgba(0,212,255,.5)">85.2% ✅</span></td>
+                <td class="wnote" style="color:var(--sub)">n=27</td>
+                <td class="wnote" style="color:var(--cyn)">최적 구간 ★</td>
+              </tr>
+              <tr>
+                <td style="color:var(--sub)">30 ~ 40pt</td>
+                <td style="color:var(--grn);font-weight:700">+2.5%</td>
+                <td><span class="wbadge" style="background:rgba(0,232,122,.12);color:var(--grn);border:1px solid rgba(0,232,122,.3)">81.2%</span></td>
+                <td class="wnote">n=16</td>
+                <td class="wnote" style="color:var(--grn)">양호</td>
+              </tr>
+              <tr>
+                <td style="color:var(--sub)">40 ~ 60pt</td>
+                <td style="color:var(--grn);font-weight:700">+2.9%</td>
+                <td><span class="wbadge" style="background:rgba(0,232,122,.12);color:var(--grn);border:1px solid rgba(0,232,122,.3)">75.0%</span></td>
+                <td class="wnote">n=20</td>
+                <td class="wnote" style="color:var(--grn)">양호</td>
+              </tr>
+              <tr>
+                <td style="color:var(--sub)">60pt 이상</td>
+                <td style="color:var(--red);font-weight:700">-1.3%</td>
+                <td><span class="wbadge" style="background:rgba(255,51,68,.12);color:var(--red);border:1px solid rgba(255,51,68,.3)">58.3%</span></td>
+                <td class="wnote">n=12</td>
+                <td class="wnote" style="color:var(--red)">극단위기 — 함정</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="ch">
         <span>점수구간별 적중률</span>
         <span style="font-size:11px">1970년대~ 전수분석</span>
@@ -504,6 +627,23 @@ let ALL_LABELS=[], ALL_PRICES=[], ALL_SELL=[], ALL_BUY=[], ALL_TL_MAP={};
 let maxP=1;
 const CL=370.7;
 
+/* ── 크로스/파동 ── */
+let CROSSES=[];       // 전체 크로스 목록
+let CROSS_MAP={};     // date → cross info
+let WAVE_HL=null;     // {start,end} 현재 강조 파동
+let crossTipOn=false;
+
+/* TYPE1 파동 스프레드별 통계 (하드코딩) */
+const WAVE_BANDS=[
+  {lo:0,  hi:10,  avg:+3.2, up:87.5, n:8,  label:'0~10pt',  note:'샘플 적음',      nc:'#ffb830'},
+  {lo:10, hi:20,  avg:+0.6, up:45.8, n:24, label:'10~20pt', note:'노이즈 ⚠️',      nc:'#ff3344'},
+  {lo:20, hi:30,  avg:+3.4, up:85.2, n:27, label:'20~30pt', note:'최적 구간 ★',    nc:'#00d4ff'},
+  {lo:30, hi:40,  avg:+2.5, up:81.2, n:16, label:'30~40pt', note:'양호',            nc:'#00e87a'},
+  {lo:40, hi:60,  avg:+2.9, up:75.0, n:20, label:'40~60pt', note:'양호',            nc:'#00e87a'},
+  {lo:60, hi:999, avg:-1.3, up:58.3, n:12, label:'60pt+',   note:'극단위기 — 함정', nc:'#ff3344'},
+];
+function getBand(ms){ return WAVE_BANDS.find(b=>ms>=b.lo&&ms<b.hi)||WAVE_BANDS[WAVE_BANDS.length-1]; }
+
 async function init(){
   try{
     const r=await fetch('dashboard_data.json');
@@ -522,6 +662,7 @@ function render(){
   gauges(D.current);
   signal(D.current);
   buildChartData();
+  computeCrosses();
   mainChart();
   probTable();
   powList(D.indicator_stats);
@@ -630,6 +771,93 @@ function buildChartData(){
   maxP=Math.max(...ALL_PRICES.filter(Boolean));
 }
 
+/* ── 크로스 & 파동 계산 ── */
+function computeCrosses(){
+  CROSSES=[]; CROSS_MAP={};
+  const n=ALL_LABELS.length, raw=[];
+  for(let i=1;i<n;i++){
+    const sp=ALL_SELL[i-1]-ALL_BUY[i-1], sc=ALL_SELL[i]-ALL_BUY[i];
+    if(sp==null||sc==null||isNaN(sp)||isNaN(sc)) continue;
+    if(sp*sc<0) raw.push({idx:i, type:sp>0?1:2, date:ALL_LABELS[i]});
+  }
+  raw.forEach((c,ci)=>{
+    const prev=ci>0?raw[ci-1].idx:0;
+    let ms=0;
+    for(let k=prev;k<c.idx;k++){
+      const s=ALL_SELL[k],b=ALL_BUY[k];
+      if(s!=null&&b!=null){ const d=Math.abs(s-b); if(d>ms) ms=d; }
+    }
+    const info={idx:c.idx, type:c.type, date:c.date, maxSpread:Math.round(ms),
+                waveStart:prev, waveEnd:c.idx};
+    CROSSES.push(info); CROSS_MAP[c.date]=info;
+  });
+}
+
+/* ── 크로스 전용 툴팁 ── */
+function showCrossTip(cx, cy, info){
+  const tip=document.getElementById('cross-tooltip');
+  const {type:t, date, maxSpread:ms, waveStart:ws, waveEnd:we}=info;
+  const hc=t===1?'#00d4ff':'#ff3344';
+  const hb=t===1?'rgba(0,212,255,.1)':'rgba(255,51,68,.1)';
+  const label=t===1?'TYPE 1 크로스 ↓':'TYPE 2 크로스 ↑';
+
+  let body='';
+  if(t===1){
+    const band=getBand(ms);
+    const ac=band.avg>=0?'#00e87a':'#ff3344';
+    const uc=band.up>=75?'#00e87a':band.up>=60?'#00d4ff':'#ffb830';
+    body=`
+      <div class="ct-row">
+        <span class="ct-lbl">파동 최대 스프레드</span>
+        <span class="ct-val" style="color:${hc}">${ms}pt <span style="color:var(--mut);font-weight:400">(${band.label})</span></span>
+      </div>
+      <div class="ct-row">
+        <span class="ct-lbl">8주 후 평균수익</span>
+        <span class="ct-val" style="color:${ac}">${band.avg>=0?'+':''}${band.avg}%</span>
+      </div>
+      <div class="ct-row">
+        <span class="ct-lbl">8주 후 상승확률</span>
+        <span class="ct-val" style="color:${uc}">${band.up}%</span>
+      </div>
+      <div class="ct-sep"></div>
+      <div class="ct-stat">
+        과거 <strong>${band.n}회</strong> 중 <strong>${Math.round(band.n*band.up/100)}회</strong> 8주 후 상승<br>
+        이 구간: <strong style="color:${band.nc}">${band.note}</strong>
+      </div>
+      <div class="ct-warn">⚠ 틀릴 때는 -10~17% 가능 (위기 지속 시)</div>`;
+  } else {
+    body=`
+      <div class="ct-row">
+        <span class="ct-lbl">파동 최대 스프레드</span>
+        <span class="ct-val" style="color:${hc}">${ms}pt</span>
+      </div>
+      <div class="ct-sep"></div>
+      <div class="ct-stat" style="color:var(--mut)">TYPE2는 단기 하락 신호지만 통계적 유의성이 낮아 참고용으로만 활용하세요.</div>`;
+  }
+
+  tip.innerHTML=`
+    <div class="ct-head" style="background:${hb};border-bottom:1px solid rgba(255,255,255,.06)">
+      <span style="color:${hc}">${label}</span>
+      <span style="font-family:'Space Mono';font-size:10px;color:var(--mut)">${date}</span>
+    </div>
+    <div class="ct-body">${body}</div>`;
+  tip.style.display='block';
+  crossTipOn=true;
+
+  const tw=tip.offsetWidth||260, th2=tip.offsetHeight||200;
+  const vw=window.innerWidth, vh=window.innerHeight;
+  let lx=cx+18, ly=cy-20;
+  if(lx+tw>vw-10) lx=cx-tw-14;
+  if(ly+th2>vh-10) ly=vh-th2-10;
+  if(ly<10) ly=10;
+  tip.style.left=lx+'px'; tip.style.top=ly+'px';
+}
+function hideCrossTip(){
+  document.getElementById('cross-tooltip').style.display='none';
+  crossTipOn=false;
+  if(WAVE_HL){ WAVE_HL=null; if(MC) MC.update('none'); }
+}
+
 /* ── TOOLTIP ── */
 let tooltipVisible=false;
 
@@ -696,23 +924,24 @@ function hideTooltip(){
 
 /* 3번 요청: 차트 바깥 터치/클릭 시 툴팁 숨기기 */
 document.addEventListener('touchstart', function(e){
-  if(!tooltipVisible) return;
+  if(!tooltipVisible&&!crossTipOn) return;
   const canvas=document.getElementById('mc');
   const tip=document.getElementById('chart-tooltip');
-  if(!canvas.contains(e.target) && !tip.contains(e.target)){
-    hideTooltip();
-    // 하단 info bar도 초기화
+  const ctip=document.getElementById('cross-tooltip');
+  if(!canvas.contains(e.target)&&!tip.contains(e.target)&&!ctip.contains(e.target)){
+    hideTooltip(); hideCrossTip();
     document.getElementById('chart-info').innerHTML=
       '<span class="ci-empty">차트 위에 마우스/터치를 올리면 상세 데이터가 표시됩니다</span>';
   }
 },{passive:true});
 
 document.addEventListener('click', function(e){
-  if(!tooltipVisible) return;
+  if(!tooltipVisible&&!crossTipOn) return;
   const canvas=document.getElementById('mc');
   const tip=document.getElementById('chart-tooltip');
-  if(!canvas.contains(e.target) && !tip.contains(e.target)){
-    hideTooltip();
+  const ctip=document.getElementById('cross-tooltip');
+  if(!canvas.contains(e.target)&&!tip.contains(e.target)&&!ctip.contains(e.target)){
+    hideTooltip(); hideCrossTip();
     document.getElementById('chart-info').innerHTML=
       '<span class="ci-empty">차트 위에 마우스/터치를 올리면 상세 데이터가 표시됩니다</span>';
   }
@@ -726,9 +955,23 @@ function mainChart(){
   grad.addColorStop(0,'rgba(102,153,204,.28)');
   grad.addColorStop(1,'rgba(102,153,204,.01)');
 
-  const exitPlugin={id:'exit',beforeDatasetsDraw(chart){
-    const{ctx:c,chartArea:{left,right,top,bottom},scales:{x}}=chart;
-    c.save(); let inE=false,sx=0;
+  /* 크로스 점 데이터: y2=50 고정으로 항상 잘 보이게 */
+  const c1pts=new Array(ALL_LABELS.length).fill(null);
+  const c2pts=new Array(ALL_LABELS.length).fill(null);
+  CROSSES.forEach(cx=>{
+    const i=ALL_LABELS.indexOf(cx.date);
+    if(i<0) return;
+    if(cx.type===1) c1pts[i]=50;
+    else            c2pts[i]=50;
+  });
+
+  /* 오버레이 플러그인: 위기 음영 + 파동 굵은 선 하이라이트 */
+  const overlayPlugin={id:'overlay', beforeDatasetsDraw(chart){
+    const{ctx:c,chartArea:{left,right,top,bottom},scales:{x,y2}}=chart;
+    c.save();
+
+    /* 1) 위기 음영 (매도≥72) */
+    let inE=false,sx=0;
     ALL_SELL.forEach((v,i)=>{
       try{
         const xp=x.getPixelForValue(i);
@@ -743,12 +986,46 @@ function mainChart(){
       }catch(e){}
     });
     if(inE){c.fillStyle='rgba(255,51,68,.1)';c.fillRect(sx,top,right-sx,bottom-top);}
+
+    /* 2) 파동 하이라이트 */
+    if(WAVE_HL){
+      const{start,end}=WAVE_HL;
+      try{
+        const x1=x.getPixelForValue(start), x2=x.getPixelForValue(end);
+        /* 배경 */
+        c.fillStyle='rgba(255,255,255,.05)';
+        c.fillRect(x1,top,x2-x1,bottom-top);
+        /* 점선 테두리 */
+        c.strokeStyle='rgba(255,255,255,.2)';
+        c.lineWidth=1; c.setLineDash([4,3]);
+        c.strokeRect(x1,top,x2-x1,bottom-top);
+        c.setLineDash([]);
+        /* 굵은 매도선 */
+        c.beginPath(); c.strokeStyle='rgba(255,51,68,1)'; c.lineWidth=3.5;
+        let first=true;
+        for(let i=start;i<=end;i++){
+          if(ALL_SELL[i]==null) continue;
+          const px=x.getPixelForValue(i), py=y2.getPixelForValue(ALL_SELL[i]);
+          first?(c.moveTo(px,py),first=false):c.lineTo(px,py);
+        }
+        c.stroke();
+        /* 굵은 매수선 */
+        c.beginPath(); c.strokeStyle='rgba(0,232,122,1)'; c.lineWidth=3.5;
+        first=true;
+        for(let i=start;i<=end;i++){
+          if(ALL_BUY[i]==null) continue;
+          const px=x.getPixelForValue(i), py=y2.getPixelForValue(ALL_BUY[i]);
+          first?(c.moveTo(px,py),first=false):c.lineTo(px,py);
+        }
+        c.stroke();
+      }catch(e){}
+    }
     c.restore();
   }};
 
   if(MC) MC.destroy();
   MC=new Chart(ctx,{
-    type:'line', plugins:[exitPlugin],
+    type:'line', plugins:[overlayPlugin],
     data:{labels:ALL_LABELS, datasets:[
       {label:'SP500', data:pNorm,
        borderColor:'rgba(102,153,204,.9)', backgroundColor:grad,
@@ -759,6 +1036,14 @@ function mainChart(){
       {label:'매수', data:ALL_BUY,
        borderColor:'rgba(0,232,122,.95)', backgroundColor:'transparent',
        borderWidth:2, pointRadius:0, tension:.3, yAxisID:'y2'},
+      /* TYPE1 크로스 점 (청록, y2=50 고정) */
+      {label:'TYPE1', data:c1pts, type:'scatter',
+       backgroundColor:'rgba(0,212,255,.85)', borderColor:'#00d4ff', borderWidth:2,
+       pointRadius:8, pointHoverRadius:11, pointStyle:'circle', yAxisID:'y2'},
+      /* TYPE2 크로스 점 (붉은, y2=50 고정) */
+      {label:'TYPE2', data:c2pts, type:'scatter',
+       backgroundColor:'rgba(255,51,68,.85)', borderColor:'#ff3344', borderWidth:2,
+       pointRadius:8, pointHoverRadius:11, pointStyle:'circle', yAxisID:'y2'},
     ]},
     options:{
       responsive:true,
@@ -769,13 +1054,9 @@ function mainChart(){
         tooltip:{
           enabled:false,
           external(c2){
-            if(c2.tooltip.opacity===0){
-              // 마우스 leave 시에는 숨기지 않음 — 터치 때문에
-              // mouseleave 이벤트로 따로 처리
-              return;
-            }
-            const idx=c2.tooltip.dataPoints[0]?.dataIndex;
-            if(idx==null) return;
+            if(c2.tooltip.opacity===0) return;
+            if(crossTipOn) return;
+            const idx=c2.tooltip.dataPoints[0]?.dataIndex; if(idx==null) return;
             const p=ALL_PRICES[idx], s=ALL_SELL[idx], b=ALL_BUY[idx];
             const sc=s>=72?'var(--red)':s>=58?'var(--yel)':'var(--cyn)';
             const bc=b>=65?'var(--grn)':b>=45?'var(--cyn)':'var(--mut)';
@@ -796,7 +1077,6 @@ function mainChart(){
         x:{ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
             maxTicksLimit:14,
             callback:function(val,i){
-              // val 은 인덱스, this.getLabelForValue(val) 이 실제 날짜 문자열
               try{
                 const lbl=this.getLabelForValue(val);
                 return lbl?lbl.slice(0,7):'';
@@ -810,20 +1090,60 @@ function mainChart(){
       },
       onHover:(e,els,chart)=>{
         if(!e.native) return;
+        /* 크로스 점 위에 있는지 먼저 확인 (dataset 3,4) */
+        const cEls=chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},true)
+                        .filter(el=>el.datasetIndex>=3);
+        if(cEls.length>0){
+          const idx=cEls[0].index;
+          const info=CROSS_MAP[ALL_LABELS[idx]];
+          if(info){
+            WAVE_HL={start:info.waveStart, end:info.waveEnd};
+            MC.update('none');
+            showCrossTip(e.native.clientX, e.native.clientY, info);
+            hideTooltip();
+            return;
+          }
+        }
+        /* 크로스 점 아닌 곳 */
+        if(crossTipOn){ hideCrossTip(); }
         const pts=chart.getElementsAtEventForMode(e.native,'index',{intersect:false},true);
         if(pts.length===0){
-          // 마우스만 숨기기 (터치는 유지)
           if(e.native.type==='mousemove'||e.native.type==='mouseout') hideTooltip();
           return;
         }
-        const idx=pts[0].index;
-        showTooltip(e.native.clientX, e.native.clientY, idx);
+        showTooltip(e.native.clientX, e.native.clientY, pts[0].index);
       }
     }
   });
 
-  // 마우스 leave만 숨기기 (터치는 유지)
-  document.getElementById('mc').addEventListener('mouseleave',()=>hideTooltip());
+  /* mouseleave */
+  document.getElementById('mc').addEventListener('mouseleave',()=>{
+    hideTooltip(); hideCrossTip();
+  });
+
+  /* 모바일 터치: 크로스 점 탭 */
+  document.getElementById('mc').addEventListener('touchend',function(e){
+    e.preventDefault();
+    const touch=e.changedTouches[0];
+    const rect=this.getBoundingClientRect();
+    const fake={clientX:touch.clientX, clientY:touch.clientY,
+                offsetX:touch.clientX-rect.left, offsetY:touch.clientY-rect.top, target:this};
+    const cEls=MC.getElementsAtEventForMode(fake,'nearest',{intersect:true},true)
+                  .filter(el=>el.datasetIndex>=3);
+    if(cEls.length>0){
+      const idx=cEls[0].index;
+      const info=CROSS_MAP[ALL_LABELS[idx]];
+      if(info){
+        WAVE_HL={start:info.waveStart, end:info.waveEnd};
+        MC.update('none');
+        showCrossTip(touch.clientX, touch.clientY, info);
+        hideTooltip(); return;
+      }
+    }
+    /* 일반 터치 */
+    const pts=MC.getElementsAtEventForMode(fake,'index',{intersect:false},true);
+    if(pts.length>0) showTooltip(touch.clientX, touch.clientY, pts[0].index);
+  },{passive:false});
 }
 
 function setRange(days,btn){
