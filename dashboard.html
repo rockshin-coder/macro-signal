@@ -794,7 +794,14 @@ function mainChart(){
       },
       scales:{
         x:{ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
-            maxTicksLimit:14,callback:(v,i)=>ALL_LABELS[i]?.slice(0,7)||''},
+            maxTicksLimit:14,
+            callback:function(val,i){
+              // val 은 인덱스, this.getLabelForValue(val) 이 실제 날짜 문자열
+              try{
+                const lbl=this.getLabelForValue(val);
+                return lbl?lbl.slice(0,7):'';
+              }catch(e){return '';}
+            }},
            grid:{color:'rgba(30,48,72,.4)'}},
         y:{position:'right',ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
             callback:v=>`$${(v/100*maxP/1000).toFixed(0)}k`},grid:{display:false}},
