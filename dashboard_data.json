@@ -1,8 +1,8 @@
 {
   "current": {
     "date": "2026-03-13",
-    "sell_score": 63.2,
-    "buy_score": 31.4,
+    "sell_score": 57.9,
+    "buy_score": 36.7,
     "signal": "HOLD",
     "action": "현 포지션 유지 — 아무것도 하지 마세요",
     "sell_detail": [
@@ -10,57 +10,57 @@
         "indicator": "vix_2w",
         "direction": "high",
         "weight": 0.12,
-        "percentile": 93.8,
-        "danger": 93.8,
-        "contrib": 11.26
+        "percentile": 92.7,
+        "danger": 92.7,
+        "contrib": 11.12
       },
       {
         "indicator": "vix",
         "direction": "high",
         "weight": 0.18,
-        "percentile": 87.7,
-        "danger": 87.7,
-        "contrib": 15.78
-      },
-      {
-        "indicator": "hy_spread_2w",
-        "direction": "high",
-        "weight": 0.08,
-        "percentile": 68.8,
-        "danger": 68.8,
-        "contrib": 5.51
+        "percentile": 87.3,
+        "danger": 87.3,
+        "contrib": 15.72
       },
       {
         "indicator": "yield_curve_4w",
         "direction": "low",
         "weight": 0.05,
-        "percentile": 35.0,
-        "danger": 65.0,
-        "contrib": 3.25
+        "percentile": 33.1,
+        "danger": 66.9,
+        "contrib": 3.35
+      },
+      {
+        "indicator": "hy_spread_2w",
+        "direction": "high",
+        "weight": 0.08,
+        "percentile": 48.1,
+        "danger": 48.1,
+        "contrib": 3.85
       },
       {
         "indicator": "credit_spread",
         "direction": "high",
         "weight": 0.14,
-        "percentile": 43.1,
-        "danger": 43.1,
-        "contrib": 6.03
+        "percentile": 42.3,
+        "danger": 42.3,
+        "contrib": 5.92
       },
       {
         "indicator": "credit_spread_2w",
         "direction": "high",
         "weight": 0.09,
-        "percentile": 38.8,
-        "danger": 38.8,
-        "contrib": 3.5
+        "percentile": 36.5,
+        "danger": 36.5,
+        "contrib": 3.29
       },
       {
         "indicator": "hy_spread",
         "direction": "high",
         "weight": 0.14,
-        "percentile": 37.3,
-        "danger": 37.3,
-        "contrib": 5.22
+        "percentile": 21.9,
+        "danger": 21.9,
+        "contrib": 3.07
       }
     ],
     "buy_detail": [
@@ -68,49 +68,49 @@
         "indicator": "vix",
         "direction": "low",
         "weight": 0.15,
-        "percentile": 87.7,
-        "safety": 87.7,
-        "contrib": 13.15
+        "percentile": 87.3,
+        "safety": 87.3,
+        "contrib": 13.1
       },
       {
         "indicator": "vix_4w",
         "direction": "low",
         "weight": 0.12,
-        "percentile": 88.5,
-        "safety": 88.5,
-        "contrib": 10.62
+        "percentile": 86.2,
+        "safety": 86.2,
+        "contrib": 10.34
       },
       {
         "indicator": "credit_spread_4w",
         "direction": "low",
         "weight": 0.09,
-        "percentile": 76.5,
-        "safety": 76.5,
-        "contrib": 6.89
+        "percentile": 72.3,
+        "safety": 72.3,
+        "contrib": 6.51
       },
       {
         "indicator": "hy_spread_4w",
         "direction": "low",
         "weight": 0.08,
-        "percentile": 79.6,
-        "safety": 79.6,
-        "contrib": 6.37
+        "percentile": 67.7,
+        "safety": 67.7,
+        "contrib": 5.42
       },
       {
         "indicator": "credit_spread",
         "direction": "low",
         "weight": 0.12,
-        "percentile": 43.1,
-        "safety": 43.1,
-        "contrib": 5.17
+        "percentile": 42.3,
+        "safety": 42.3,
+        "contrib": 5.08
       },
       {
         "indicator": "hy_spread",
         "direction": "low",
         "weight": 0.12,
-        "percentile": 37.3,
-        "safety": 37.3,
-        "contrib": 4.48
+        "percentile": 21.9,
+        "safety": 21.9,
+        "contrib": 2.63
       }
     ]
   },
@@ -121,25 +121,25 @@
           "band": "낮음",
           "lo": 0,
           "hi": 40,
-          "down_prob": 7.5,
+          "down_prob": 7.6,
           "avg_ret": 0.17,
-          "n": 967
+          "n": 966
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
-          "down_prob": 12.1,
+          "down_prob": 12.0,
           "avg_ret": 0.22,
-          "n": 539
+          "n": 541
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
           "down_prob": 17.0,
-          "avg_ret": 0.16,
-          "n": 283
+          "avg_ret": 0.15,
+          "n": 282
         },
         {
           "band": "경고",
@@ -165,23 +165,23 @@
           "hi": 40,
           "down_prob": 12.1,
           "avg_ret": 0.38,
-          "n": 967
+          "n": 966
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
-          "down_prob": 19.5,
-          "avg_ret": 0.29,
-          "n": 539
+          "down_prob": 19.4,
+          "avg_ret": 0.3,
+          "n": 541
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
-          "down_prob": 21.2,
-          "avg_ret": 0.3,
-          "n": 283
+          "down_prob": 21.3,
+          "avg_ret": 0.29,
+          "n": 282
         },
         {
           "band": "경고",
@@ -207,23 +207,23 @@
           "hi": 40,
           "down_prob": 14.4,
           "avg_ret": 0.56,
-          "n": 967
+          "n": 966
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
           "down_prob": 18.7,
-          "avg_ret": 0.46,
-          "n": 539
+          "avg_ret": 0.47,
+          "n": 541
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
-          "down_prob": 25.2,
+          "down_prob": 25.3,
           "avg_ret": 0.41,
-          "n": 282
+          "n": 281
         },
         {
           "band": "경고",
@@ -249,23 +249,23 @@
           "hi": 40,
           "down_prob": 16.1,
           "avg_ret": 0.77,
-          "n": 967
+          "n": 966
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
-          "down_prob": 23.4,
-          "avg_ret": 0.59,
-          "n": 538
+          "down_prob": 23.3,
+          "avg_ret": 0.6,
+          "n": 540
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
-          "down_prob": 24.8,
-          "avg_ret": 0.72,
-          "n": 282
+          "down_prob": 24.9,
+          "avg_ret": 0.71,
+          "n": 281
         },
         {
           "band": "경고",
@@ -291,23 +291,23 @@
           "hi": 40,
           "down_prob": 16.8,
           "avg_ret": 0.91,
-          "n": 967
+          "n": 966
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
-          "down_prob": 23.2,
+          "down_prob": 23.3,
           "avg_ret": 0.81,
-          "n": 538
+          "n": 540
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
-          "down_prob": 28.1,
-          "avg_ret": 1.01,
-          "n": 281
+          "down_prob": 27.9,
+          "avg_ret": 1.03,
+          "n": 280
         },
         {
           "band": "경고",
@@ -333,23 +333,23 @@
           "hi": 40,
           "down_prob": 17.0,
           "avg_ret": 1.06,
-          "n": 967
+          "n": 966
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
-          "down_prob": 22.0,
+          "down_prob": 21.9,
           "avg_ret": 1.03,
-          "n": 537
+          "n": 539
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
-          "down_prob": 27.0,
+          "down_prob": 27.1,
           "avg_ret": 1.05,
-          "n": 281
+          "n": 280
         },
         {
           "band": "경고",
@@ -375,23 +375,23 @@
           "hi": 40,
           "down_prob": 14.9,
           "avg_ret": 1.41,
-          "n": 965
+          "n": 964
         },
         {
           "band": "보통",
           "lo": 40,
           "hi": 55,
-          "down_prob": 22.2,
+          "down_prob": 22.1,
           "avg_ret": 1.49,
-          "n": 537
+          "n": 539
         },
         {
           "band": "주의",
           "lo": 55,
           "hi": 65,
-          "down_prob": 28.5,
+          "down_prob": 28.6,
           "avg_ret": 1.46,
-          "n": 281
+          "n": 280
         },
         {
           "band": "경고",
@@ -702,7 +702,7 @@
           "lo": 75,
           "hi": 100,
           "up_prob": 41.7,
-          "avg_ret": 0.39,
+          "avg_ret": 0.38,
           "n": 24
         }
       ]
@@ -1261,7 +1261,7 @@
         "credit_spread_2w": 1.4,
         "hy_spread": 9.7,
         "hy_spread_2w": 0.4,
-        "fin_stress": 4.5,
+        "fin_stress": 4.6,
         "ted_spread": 0.1,
         "rate_hiking": 0.0,
         "yield_curve_4w": 3.7
@@ -1503,7 +1503,7 @@
     },
     {
       "date": "2020-11-06",
-      "sell": 45.2,
+      "sell": 45.3,
       "buy": 43.7,
       "sp500": 3537.0,
       "sell_contributions": {
@@ -1513,7 +1513,7 @@
         "credit_spread_2w": 1.3,
         "hy_spread": 9.0,
         "hy_spread_2w": 2.1,
-        "fin_stress": 4.7,
+        "fin_stress": 4.8,
         "ted_spread": 0.0,
         "rate_hiking": 0.0,
         "yield_curve_4w": 1.3
@@ -1611,7 +1611,7 @@
     },
     {
       "date": "2020-12-18",
-      "sell": 49.4,
+      "sell": 49.5,
       "buy": 46.0,
       "sp500": 3703.0,
       "sell_contributions": {
@@ -2665,14 +2665,14 @@
         "credit_spread_2w": 8.4,
         "hy_spread": 5.3,
         "hy_spread_2w": 7.6,
-        "fin_stress": 5.5,
+        "fin_stress": 5.4,
         "rate_hiking": 0.0,
         "yield_curve_4w": 4.7
       }
     },
     {
       "date": "2022-02-04",
-      "sell": 49.7,
+      "sell": 49.6,
       "buy": 33.6,
       "sp500": 4504.0,
       "sell_contributions": {
@@ -2682,7 +2682,7 @@
         "credit_spread_2w": 7.9,
         "hy_spread": 4.6,
         "hy_spread_2w": 7.0,
-        "fin_stress": 3.1,
+        "fin_stress": 3.0,
         "rate_hiking": 0.0,
         "yield_curve_4w": 5.0
       }
@@ -3600,14 +3600,14 @@
         "credit_spread_2w": 6.6,
         "hy_spread": 9.7,
         "hy_spread_2w": 7.2,
-        "fin_stress": 2.7,
+        "fin_stress": 2.6,
         "rate_hiking": 4.4,
         "yield_curve_4w": 3.9
       }
     },
     {
       "date": "2023-02-24",
-      "sell": 57.1,
+      "sell": 57.0,
       "buy": 38.6,
       "sp500": 3981.0,
       "sell_contributions": {
@@ -3617,7 +3617,7 @@
         "credit_spread_2w": 4.9,
         "hy_spread": 9.2,
         "hy_spread_2w": 4.6,
-        "fin_stress": 4.5,
+        "fin_stress": 4.4,
         "rate_hiking": 4.4,
         "yield_curve_4w": 4.2
       }
@@ -3862,7 +3862,7 @@
     },
     {
       "date": "2023-06-09",
-      "sell": 35.0,
+      "sell": 35.1,
       "buy": 55.4,
       "sp500": 4426.0,
       "sell_contributions": {
@@ -3923,7 +3923,7 @@
         "credit_spread_2w": 1.9,
         "hy_spread": 6.7,
         "hy_spread_2w": 3.2,
-        "fin_stress": 1.0,
+        "fin_stress": 1.1,
         "rate_hiking": 4.3,
         "yield_curve_4w": 4.6
       }
@@ -4185,7 +4185,7 @@
     },
     {
       "date": "2023-10-20",
-      "sell": 53.8,
+      "sell": 53.7,
       "buy": 35.2,
       "sp500": 4137.0,
       "sell_contributions": {
@@ -4195,7 +4195,7 @@
         "credit_spread_2w": 6.2,
         "hy_spread": 9.8,
         "hy_spread_2w": 6.2,
-        "fin_stress": 4.2,
+        "fin_stress": 4.1,
         "rate_hiking": 0.0,
         "yield_curve_4w": 0.0
       }
@@ -4219,7 +4219,7 @@
     },
     {
       "date": "2023-11-03",
-      "sell": 22.1,
+      "sell": 22.2,
       "buy": 57.6,
       "sp500": 4347.0,
       "sell_contributions": {
@@ -4229,7 +4229,7 @@
         "credit_spread_2w": 4.5,
         "hy_spread": 6.4,
         "hy_spread_2w": 0.6,
-        "fin_stress": 1.8,
+        "fin_stress": 1.9,
         "rate_hiking": 0.0,
         "yield_curve_4w": 1.9
       }
@@ -4263,7 +4263,7 @@
         "credit_spread_2w": 1.9,
         "hy_spread": 5.5,
         "hy_spread_2w": 3.8,
-        "fin_stress": 1.7,
+        "fin_stress": 1.8,
         "rate_hiking": 0.0,
         "yield_curve_4w": 4.8
       }
@@ -4338,7 +4338,7 @@
     },
     {
       "date": "2023-12-22",
-      "sell": 25.8,
+      "sell": 25.9,
       "buy": 65.1,
       "sp500": 4783.0,
       "sell_contributions": {
@@ -4399,7 +4399,7 @@
         "credit_spread_2w": 6.0,
         "hy_spread": 2.9,
         "hy_spread_2w": 6.6,
-        "fin_stress": 1.1,
+        "fin_stress": 1.0,
         "rate_hiking": 0.0,
         "yield_curve_4w": 0.1
       }
@@ -5045,7 +5045,7 @@
         "credit_spread_2w": 1.6,
         "hy_spread": 0.0,
         "hy_spread_2w": 1.6,
-        "fin_stress": 2.8,
+        "fin_stress": 2.7,
         "rate_hiking": 0.0,
         "yield_curve_4w": 2.6
       }
@@ -5113,7 +5113,7 @@
         "credit_spread_2w": 2.4,
         "hy_spread": 0.0,
         "hy_spread_2w": 3.9,
-        "fin_stress": 5.2,
+        "fin_stress": 5.1,
         "rate_hiking": 0.0,
         "yield_curve_4w": 1.3
       }
@@ -5266,7 +5266,7 @@
         "credit_spread_2w": 5.2,
         "hy_spread": 0.3,
         "hy_spread_2w": 3.9,
-        "fin_stress": 2.6,
+        "fin_stress": 2.7,
         "rate_hiking": 0.0,
         "yield_curve_4w": 0.3
       }
@@ -5470,7 +5470,7 @@
         "credit_spread_2w": 7.8,
         "hy_spread": 5.5,
         "hy_spread_2w": 6.7,
-        "fin_stress": 2.9,
+        "fin_stress": 2.8,
         "rate_hiking": 0.0,
         "yield_curve_4w": 1.2
       }
@@ -5511,7 +5511,7 @@
     },
     {
       "date": "2025-04-18",
-      "sell": 45.3,
+      "sell": 45.4,
       "buy": 22.5,
       "sp500": 5485.0,
       "sell_contributions": {
@@ -5919,7 +5919,7 @@
     },
     {
       "date": "2025-10-03",
-      "sell": 38.4,
+      "sell": 38.5,
       "buy": 56.5,
       "sp500": 6735.0,
       "sell_contributions": {
@@ -6201,7 +6201,7 @@
         "credit_spread_2w": 1.4,
         "hy_spread": 0.4,
         "hy_spread_2w": 3.4,
-        "fin_stress": 2.3,
+        "fin_stress": 2.2,
         "rate_hiking": 0.0,
         "yield_curve_4w": 3.1
       }
@@ -6242,7 +6242,7 @@
     },
     {
       "date": "2026-02-13",
-      "sell": 55.8,
+      "sell": 55.9,
       "buy": 40.1,
       "sp500": 6862.0,
       "sell_contributions": {
@@ -6252,7 +6252,7 @@
         "credit_spread_2w": 7.9,
         "hy_spread": 2.4,
         "hy_spread_2w": 6.2,
-        "fin_stress": 3.4,
+        "fin_stress": 3.5,
         "yield_curve_4w": 2.6
       }
     },
@@ -6274,7 +6274,7 @@
     },
     {
       "date": "2026-02-27",
-      "sell": 56.5,
+      "sell": 56.6,
       "buy": 41.0,
       "sp500": 6831.0,
       "sell_contributions": {
@@ -6290,9 +6290,9 @@
     },
     {
       "date": "2026-03-06",
-      "sell": 70.4,
+      "sell": 70.2,
       "buy": 38.1,
-      "sp500": 6781.0,
+      "sp500": 6776.0,
       "sell_contributions": {
         "vix": 17.0,
         "vix_2w": 11.8,
@@ -6300,22 +6300,23 @@
         "credit_spread_2w": 7.0,
         "hy_spread": 4.2,
         "hy_spread_2w": 7.0,
+        "fin_stress": 5.4,
         "yield_curve_4w": 3.9
       }
     },
     {
       "date": "2026-03-13",
-      "sell": 63.2,
-      "buy": 31.4,
-      "sp500": 6781.0,
+      "sell": 57.9,
+      "buy": 36.7,
+      "sp500": 6776.0,
       "sell_contributions": {
-        "vix": 15.8,
-        "vix_2w": 11.3,
-        "credit_spread": 6.0,
-        "credit_spread_2w": 3.5,
-        "hy_spread": 5.2,
-        "hy_spread_2w": 5.5,
-        "yield_curve_4w": 3.2
+        "vix": 15.7,
+        "vix_2w": 11.1,
+        "credit_spread": 5.9,
+        "credit_spread_2w": 3.3,
+        "hy_spread": 3.1,
+        "hy_spread_2w": 3.8,
+        "yield_curve_4w": 3.3
       }
     }
   ],
@@ -6688,7 +6689,7 @@
     {
       "date": "2009-09-04",
       "price": 1044.0,
-      "sell": 55.9,
+      "sell": 56.0,
       "buy": 34.1
     },
     {
@@ -6862,7 +6863,7 @@
     {
       "date": "2010-03-26",
       "price": 1178.0,
-      "sell": 40.9,
+      "sell": 40.8,
       "buy": 62.7
     },
     {
@@ -8074,7 +8075,7 @@
     {
       "date": "2014-02-07",
       "price": 1830.0,
-      "sell": 26.0,
+      "sell": 26.1,
       "buy": 53.7
     },
     {
@@ -8104,7 +8105,7 @@
     {
       "date": "2014-03-14",
       "price": 1872.0,
-      "sell": 38.9,
+      "sell": 39.0,
       "buy": 53.6
     },
     {
@@ -8266,7 +8267,7 @@
     {
       "date": "2014-09-19",
       "price": 1966.0,
-      "sell": 24.0,
+      "sell": 23.9,
       "buy": 61.6
     },
     {
@@ -8524,7 +8525,7 @@
     {
       "date": "2015-07-17",
       "price": 2102.0,
-      "sell": 36.4,
+      "sell": 36.3,
       "buy": 48.3
     },
     {
@@ -9082,7 +9083,7 @@
     {
       "date": "2017-04-28",
       "price": 2390.0,
-      "sell": 19.6,
+      "sell": 19.5,
       "buy": 63.7
     },
     {
@@ -9100,7 +9101,7 @@
     {
       "date": "2017-05-19",
       "price": 2415.0,
-      "sell": 33.9,
+      "sell": 34.0,
       "buy": 61.1
     },
     {
@@ -9352,7 +9353,7 @@
     {
       "date": "2018-03-09",
       "price": 2747.0,
-      "sell": 42.7,
+      "sell": 42.6,
       "buy": 54.3
     },
     {
@@ -10186,7 +10187,7 @@
     {
       "date": "2020-11-06",
       "price": 3537.0,
-      "sell": 45.2,
+      "sell": 45.3,
       "buy": 43.7
     },
     {
@@ -10222,7 +10223,7 @@
     {
       "date": "2020-12-18",
       "price": 3703.0,
-      "sell": 49.4,
+      "sell": 49.5,
       "buy": 46.0
     },
     {
@@ -10576,7 +10577,7 @@
     {
       "date": "2022-02-04",
       "price": 4504.0,
-      "sell": 49.7,
+      "sell": 49.6,
       "buy": 33.6
     },
     {
@@ -10906,7 +10907,7 @@
     {
       "date": "2023-02-24",
       "price": 3981.0,
-      "sell": 57.1,
+      "sell": 57.0,
       "buy": 38.6
     },
     {
@@ -10996,7 +10997,7 @@
     {
       "date": "2023-06-09",
       "price": 4426.0,
-      "sell": 35.0,
+      "sell": 35.1,
       "buy": 55.4
     },
     {
@@ -11110,7 +11111,7 @@
     {
       "date": "2023-10-20",
       "price": 4137.0,
-      "sell": 53.8,
+      "sell": 53.7,
       "buy": 35.2
     },
     {
@@ -11122,7 +11123,7 @@
     {
       "date": "2023-11-03",
       "price": 4347.0,
-      "sell": 22.1,
+      "sell": 22.2,
       "buy": 57.6
     },
     {
@@ -11164,7 +11165,7 @@
     {
       "date": "2023-12-22",
       "price": 4783.0,
-      "sell": 25.8,
+      "sell": 25.9,
       "buy": 65.1
     },
     {
@@ -11578,7 +11579,7 @@
     {
       "date": "2025-04-18",
       "price": 5485.0,
-      "sell": 45.3,
+      "sell": 45.4,
       "buy": 22.5
     },
     {
@@ -11722,7 +11723,7 @@
     {
       "date": "2025-10-03",
       "price": 6735.0,
-      "sell": 38.4,
+      "sell": 38.5,
       "buy": 56.5
     },
     {
@@ -11836,7 +11837,7 @@
     {
       "date": "2026-02-13",
       "price": 6862.0,
-      "sell": 55.8,
+      "sell": 55.9,
       "buy": 40.1
     },
     {
@@ -11848,15 +11849,15 @@
     {
       "date": "2026-02-27",
       "price": 6831.0,
-      "sell": 56.5,
+      "sell": 56.6,
       "buy": 41.0
     },
     {
       "date": "2026-03-06",
-      "price": 6781.0,
-      "sell": 70.4,
+      "price": 6776.0,
+      "sell": 70.2,
       "buy": 38.1
     }
   ],
-  "generated_at": "2026-03-11T01:26:25.605843"
+  "generated_at": "2026-03-12T01:26:21.968884"
 }
