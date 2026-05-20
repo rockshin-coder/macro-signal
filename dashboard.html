@@ -1439,6 +1439,46 @@ function mainChart(){
         try{c.lineTo(x.getPixelForValue(i),y2.getPixelForValue(v));}catch(e2){}
       }
       c.closePath(); c.fill();
+
+      // ★ area 숫자 구간 중앙에 크게 표시
+      try{
+        // 구간 넓이가 너무 좁으면 스킵
+        const x1=x.getPixelForValue(s), x2=x.getPixelForValue(e);
+        const pxWidth=Math.abs(x2-x1);
+        if(pxWidth<40) continue; // 너무 좁으면 스킵
+
+        // area 계산 (현재 구간)
+        let areaVal=0;
+        for(let k=s;k<=e;k++){
+          const sv2=extSell[k],bv2=extBuy[k];
+          if(sv2!=null&&bv2!=null&&!isNaN(sv2)&&!isNaN(bv2)) areaVal+=Math.abs(sv2-bv2);
+        }
+        const areaText=Math.round(areaVal)+'pt';
+        const midX=(x1+x2)/2;
+
+        // y 위치: 두 선 사이 중간
+        const midIdx=Math.floor((s+e)/2);
+        const sv3=extSell[midIdx]||50, bv3=extBuy[midIdx]||50;
+        const py1=y2.getPixelForValue(Math.max(sv3,bv3));
+        const py2=y2.getPixelForValue(Math.min(sv3,bv3));
+        const midY=(py1+py2)/2;
+        const spanPx=Math.abs(py2-py1);
+
+        // 폰트 크기: 구간 높이와 너비에 따라 동적 조정
+        const fs=Math.max(11,Math.min(20,spanPx*0.28,pxWidth*0.12));
+        c.save();
+        c.font=`bold ${Math.round(fs)}px "Space Mono",monospace`;
+        c.textAlign='center';
+        c.textBaseline='middle';
+        // 반투명 배경
+        const tw2=c.measureText(areaText).width+12;
+        c.fillStyle='rgba(6,10,15,.65)';
+        c.fillRect(midX-tw2/2,midY-fs/2-4,tw2,fs+8);
+        // 텍스트 색
+        c.fillStyle=isRed?'rgba(255,100,100,.95)':'rgba(0,232,122,.95)';
+        c.fillText(areaText,midX,midY);
+        c.restore();
+      }catch(e2){}
     }
 
     // 2) 위기 음영
@@ -1510,19 +1550,63 @@ function mainChart(){
       }catch(e2){}
     }
 
-    // 5) 예측 구분선
+    // 5) 예측 구분선 + 날짜 표시
     try{
       const xp=x.getPixelForValue(n-1);
       c.save();
+      // 구분선
       c.setLineDash([5,4]);
-      c.strokeStyle='rgba(255,255,255,.15)';
+      c.strokeStyle='rgba(255,255,255,.2)';
       c.lineWidth=1;
       c.beginPath(); c.moveTo(xp,top); c.lineTo(xp,bottom); c.stroke();
       c.setLineDash([]);
-      c.fillStyle='rgba(255,255,255,.3)';
+
+      // 마지막 확정 날짜
+      const lastLbl=ALL_LABELS[n-1]||'';
+      c.fillStyle='rgba(255,255,255,.35)';
       c.font='9px Space Mono';
-      c.textAlign='right'; c.fillText('◀ 확정',xp-4,top+12);
-      c.textAlign='left';  c.fillText('예측 ▶',xp+4,top+12);
+      c.textAlign='right';
+      c.fillText('◀ 확정  '+lastLbl, xp-5, top+13);
+
+      // 오늘 날짜 (예측 시작)
+      const todayStr=new Date().toISOString().slice(0,10);
+      c.textAlign='left';
+      c.fillStyle='rgba(255,184,48,.8)';
+      c.font='bold 10px Space Mono';
+      c.fillText('오늘 '+todayStr+' ▶', xp+5, top+13);
+
+      // 예측 끝점에 오늘 날짜 배지
+      if(predWeeks>0){
+        const lastPredIdx=n+predWeeks-1;
+        try{
+          const xEnd=x.getPixelForValue(lastPredIdx);
+          // 매도 예측 끝점
+          const sEnd=predSell[predSell.length-1];
+          const bEnd=predBuy[predBuy.length-1];
+          if(sEnd!=null&&bEnd!=null){
+            const pyS=y2.getPixelForValue(sEnd);
+            const pyB=y2.getPixelForValue(bEnd);
+            // 날짜 배지
+            c.save();
+            c.font='bold 10px Space Mono';
+            c.textAlign='center';
+            const badge=todayStr;
+            const bw=c.measureText(badge).width+10;
+            // 두 점 사이 중간
+            const midPy=(pyS+pyB)/2;
+            c.fillStyle='rgba(255,184,48,.15)';
+            c.strokeStyle='rgba(255,184,48,.6)';
+            c.lineWidth=1;
+            const br=4;
+            c.beginPath();
+            c.roundRect(xEnd-bw/2,midPy-22,bw,18,br);
+            c.fill(); c.stroke();
+            c.fillStyle='rgba(255,184,48,.95)';
+            c.fillText(badge,xEnd,midPy-9);
+            c.restore();
+          }
+        }catch(e3){}
+      }
       c.restore();
     }catch(e2){}
 
