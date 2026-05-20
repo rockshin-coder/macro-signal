@@ -540,124 +540,6 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     </div>
   </div>
 
-  <!-- ★ AREA 분석 섹션 -->
-  <div class="card sec" id="area-section">
-    <div class="ch">
-      <span>⚡ AREA 분석 — 포지션 사이징 가이드</span>
-      <span style="font-size:11px;color:var(--mut)">붉은/녹색 구간 면적 기반 전략</span>
-    </div>
-
-    <!-- 상단: 현재 상태 + 권장 포지션 -->
-    <div style="padding:16px 18px;border-bottom:1px solid rgba(30,48,72,.5)">
-      <div class="area-status-row">
-        <!-- 현재 구간 정보 -->
-        <div class="area-stat-box" id="area-cur-box">
-          <div class="area-stat-label">현재 구간</div>
-          <div class="area-stat-val" id="area-cur-type">--</div>
-          <div class="area-stat-sub" id="area-cur-weeks">-- 주 진행중</div>
-        </div>
-        <!-- 현재 누적 area -->
-        <div class="area-stat-box">
-          <div class="area-stat-label">누적 Area</div>
-          <div class="area-stat-val" id="area-cur-val" style="color:var(--cyn)">--</div>
-          <div class="area-stat-sub">pt·주 (이번 구간)</div>
-        </div>
-        <!-- 권장 포지션 -->
-        <div class="area-stat-box area-pos-box" id="area-pos-box">
-          <div class="area-stat-label">크로스 시 권장 포지션</div>
-          <div class="area-stat-val" id="area-pos-val">--%</div>
-          <div class="area-stat-sub" id="area-pos-reason">--</div>
-        </div>
-        <!-- 현재 스프레드 -->
-        <div class="area-stat-box">
-          <div class="area-stat-label">현재 스프레드</div>
-          <div class="area-stat-val" id="area-spread-val" style="color:var(--yel)">--</div>
-          <div class="area-stat-sub">매도 - 매수</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Area 차트 (예측 포함) -->
-    <div style="padding:12px 18px 0">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
-        <div style="font-family:'Space Mono';font-size:11px;color:var(--sub);letter-spacing:1px">
-          AREA CHART — 구간별 누적 면적
-        </div>
-        <div style="display:flex;gap:10px;font-family:'Space Mono';font-size:11px;flex-wrap:wrap">
-          <span><span style="display:inline-block;width:24px;height:3px;background:rgba(255,51,68,.7);vertical-align:middle;margin-right:4px"></span>RED area</span>
-          <span><span style="display:inline-block;width:24px;height:3px;background:rgba(0,232,122,.7);vertical-align:middle;margin-right:4px"></span>GREEN area</span>
-          <span><span style="display:inline-block;width:24px;height:3px;background:rgba(255,184,48,.9);border-top:2px dashed rgba(255,184,48,.9);vertical-align:middle;margin-right:4px"></span>예측(추세)</span>
-          <span><span style="display:inline-block;width:24px;height:3px;border-top:2px dashed rgba(0,212,255,.9);vertical-align:middle;margin-right:4px"></span>예측(패턴)</span>
-        </div>
-      </div>
-      <canvas id="area-chart" height="160"></canvas>
-    </div>
-
-    <!-- 하단: 전략 테이블 -->
-    <div style="padding:16px 18px 0;border-top:1px solid rgba(30,48,72,.4);margin-top:12px">
-      <div style="font-family:'Space Mono';font-size:11px;color:var(--cyn);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">
-        📋 Area 기반 포지션 전략 룰
-      </div>
-      <div class="scroll">
-        <table class="wtbl" style="min-width:600px">
-          <thead>
-            <tr>
-              <th>시점</th>
-              <th>직전 구간 Area</th>
-              <th>권장 포지션</th>
-              <th>근거</th>
-              <th>기대 수익</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- TYPE1 크로스 (매수 시점) -->
-            <tr style="background:rgba(0,212,255,.04)">
-              <td style="color:var(--cyn);font-weight:700" rowspan="3">TYPE1 크로스<br><span style="font-size:10px;color:var(--mut);font-weight:400">매도↓ → 매수 시점</span></td>
-              <td style="color:var(--sub)">RED area &lt; 200pt·주<br><span style="font-size:10px;color:var(--mut)">(소형 위기)</span></td>
-              <td><span class="wbadge" style="background:rgba(0,232,122,.2);color:var(--grn);border:1px solid rgba(0,232,122,.4);font-size:13px">100% 풀매수</span></td>
-              <td style="font-size:11px;color:var(--sub)">뒤따르는 GREEN avg 4.0x<br>상승 여력 가장 큼</td>
-              <td style="color:var(--grn);font-weight:700">+3~5%<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
-            </tr>
-            <tr>
-              <td style="color:var(--sub)">RED area 200~500pt·주<br><span style="font-size:10px;color:var(--mut)">(중형 위기)</span></td>
-              <td><span class="wbadge" style="background:rgba(255,184,48,.15);color:var(--yel);border:1px solid rgba(255,184,48,.3);font-size:13px">50% 절반매수</span></td>
-              <td style="font-size:11px;color:var(--sub)">반등 GREEN avg 0.20x<br>반등이 약함 주의</td>
-              <td style="color:var(--yel);font-weight:700">+1~2%<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
-            </tr>
-            <tr style="background:rgba(255,51,68,.03)">
-              <td style="color:var(--sub)">RED area &gt; 500pt·주<br><span style="font-size:10px;color:var(--mut)">(대형 위기)</span></td>
-              <td><span class="wbadge" style="background:rgba(255,51,68,.15);color:var(--red);border:1px solid rgba(255,51,68,.3);font-size:13px">20~30% 소량</span></td>
-              <td style="font-size:11px;color:var(--sub)">반등 GREEN avg 0.03x<br>위기 진행중 가능성</td>
-              <td style="color:var(--red);font-weight:700">불확실<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
-            </tr>
-            <!-- TYPE2 크로스 (매도 시점) -->
-            <tr style="background:rgba(255,51,68,.03)">
-              <td style="color:var(--red);font-weight:700" rowspan="3">TYPE2 크로스<br><span style="font-size:10px;color:var(--mut);font-weight:400">매도↑ → 매도 시점</span></td>
-              <td style="color:var(--sub)">GREEN area &lt; 200pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 초기)</span></td>
-              <td><span class="wbadge" style="background:rgba(0,212,255,.12);color:var(--cyn);border:1px solid rgba(0,212,255,.3);font-size:13px">홀드 유지</span></td>
-              <td style="font-size:11px;color:var(--sub)">아직 상승 초기<br>매도 신호 약함</td>
-              <td style="color:var(--cyn);font-weight:700">관망</td>
-            </tr>
-            <tr>
-              <td style="color:var(--sub)">GREEN area 200~500pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 중반)</span></td>
-              <td><span class="wbadge" style="background:rgba(255,184,48,.15);color:var(--yel);border:1px solid rgba(255,184,48,.3);font-size:13px">50% 절반매도</span></td>
-              <td style="font-size:11px;color:var(--sub)">상승분 일부 확보<br>추가 상승 여지 있음</td>
-              <td style="color:var(--yel);font-weight:700">수익 실현</td>
-            </tr>
-            <tr style="background:rgba(255,51,68,.03)">
-              <td style="color:var(--sub)">GREEN area &gt; 500pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 과열)</span></td>
-              <td><span class="wbadge" style="background:rgba(255,51,68,.15);color:var(--red);border:1px solid rgba(255,51,68,.3);font-size:13px">전량 매도</span></td>
-              <td style="font-size:11px;color:var(--sub)">상관계수 +0.75<br>area 클수록 하락 위험</td>
-              <td style="color:var(--red);font-weight:700">리스크 차단</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:10px;padding-bottom:4px">
-        ⚠ 근거: RED area↔S&P 상관계수 -0.803 / GREEN area↔S&P 상관계수 +0.754 / 2004~2026 분석 (159개 구간)
-      </div>
-    </div>
-  </div>
 
   <!-- 적중률 + 예측력 -->
   <div class="r3 sec">
@@ -812,7 +694,6 @@ function render(){
   buildChartData();
   computeCrosses();
   mainChart();
-  areaSection();
   probTable();
   powList(D.indicator_stats);
   heatmaps(D.hit_rates);
@@ -1657,18 +1538,52 @@ function mainChart(){
           enabled:false,
           external(c2){
             if(c2.tooltip.opacity===0||crossTipOn) return;
-            const idx=c2.tooltip.dataPoints[0]?.dataIndex; if(idx==null) return;
+            const pts=c2.tooltip.dataPoints;
+            if(!pts||pts.length===0) return;
+            const idx=pts[0].dataIndex;
+            if(idx==null) return;
             const isPred=idx>=n;
             const p=idx<n?ALL_PRICES[idx]:null;
-            const s=extSell[idx],b=extBuy[idx];
+            const s=extSell[idx], b=extBuy[idx];
             const sc=s>=72?'var(--red)':s>=58?'var(--yel)':'var(--cyn)';
             const bc=b>=65?'var(--grn)':b>=45?'var(--cyn)':'var(--mut)';
+            const spread=s!=null&&b!=null?(s-b):null;
+            const spCol=spread>0?'var(--red)':spread<0?'var(--grn)':'var(--mut)';
+
+            if(isPred){
+              // 예측 구간: 플로팅 툴팁으로 수치 표시
+              const tip=document.getElementById('chart-tooltip');
+              tip.innerHTML=`
+                <div class="tt-date" style="color:var(--yel)">📍 ${extLabels[idx]} <span style="font-size:10px;color:var(--mut)">(예측)</span></div>
+                <div class="tt-row"><span class="tt-label">매도 위험점수</span><span class="tt-value" style="color:${sc}">${s!=null?s.toFixed(1):'--'}</span></div>
+                <div class="tt-row"><span class="tt-label">매수 안전점수</span><span class="tt-value" style="color:${bc}">${b!=null?b.toFixed(1):'--'}</span></div>
+                <div class="tt-row"><span class="tt-label">스프레드</span><span class="tt-value" style="color:${spCol}">${spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--'}</span></div>
+                <div class="tt-sep"></div>
+                <div class="tt-row" style="font-size:10px"><span class="tt-label" style="color:var(--mut)">* 최근 추세 기반 예측값</span></div>`;
+              tip.style.display='block';
+              tooltipVisible=true;
+              // 위치
+              const pos=c2.chart.canvas.getBoundingClientRect();
+              const tp=c2.tooltip;
+              let lx=pos.left+tp.caretX+14;
+              let ly=pos.top+tp.caretY-20;
+              const tw=tip.offsetWidth||180, th=tip.offsetHeight||120;
+              const vw=window.innerWidth, vh=window.innerHeight;
+              if(lx+tw>vw-10) lx=pos.left+tp.caretX-tw-10;
+              if(ly+th>vh-10) ly=vh-th-10;
+              if(ly<10) ly=10;
+              tip.style.left=lx+'px'; tip.style.top=ly+'px';
+            } else {
+              hideTooltip();
+            }
+
+            // 하단 info bar는 항상 업데이트
             document.getElementById('chart-info').innerHTML=`
-              <div class="ci">날짜<span>${extLabels[idx]}${isPred?' <span style="color:var(--yel)">(예측)</span>':''}</span></div>
+              <div class="ci">날짜<span>${extLabels[idx]}${isPred?' <span style="color:var(--yel)">예측</span>':''}</span></div>
               ${p?`<div class="ci">S&P500<span style="color:#6699cc">$${p.toLocaleString()}</span></div>`:''}
               <div class="ci">매도위험<span style="color:${sc}">${s!=null?s.toFixed(1):'--'}</span></div>
               <div class="ci">매수안전<span style="color:${bc}">${b!=null?b.toFixed(1):'--'}</span></div>
-              ${isPred?'<div class="ci" style="color:var(--mut);font-size:11px">* 추세 기반 예측값</div>':''}`;
+              ${isPred?`<div class="ci">스프레드<span style="color:${spCol}">${spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--'}</span></div>`:''}`;
           }
         },
         zoom:{
@@ -1708,7 +1623,9 @@ function mainChart(){
           if(e.native.type==='mousemove'||e.native.type==='mouseout') hideTooltip();
           return;
         }
-        showTooltip(e.native.clientX,e.native.clientY,pts[0].index);
+        const idx2=pts[0].index;
+        // 예측 구간이면 플로팅 툴팁은 external에서 처리, 일반 구간만 showTooltip
+        if(idx2<n) showTooltip(e.native.clientX,e.native.clientY,idx2);
       }
     }
   });
