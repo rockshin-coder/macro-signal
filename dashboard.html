@@ -1354,27 +1354,94 @@ document.addEventListener('click', function(e){
 /* ── MAIN CHART ── */
 function mainChart(){
   const ctx=document.getElementById('mc').getContext('2d');
+  const n=ALL_LABELS.length;
   const pNorm=ALL_PRICES.map(p=>p?(p/maxP*100):null);
-  const grad=ctx.createLinearGradient(0,0,0,190);
-  grad.addColorStop(0,'rgba(102,153,204,.28)');
+  const grad=ctx.createLinearGradient(0,0,0,210);
+  grad.addColorStop(0,'rgba(102,153,204,.22)');
   grad.addColorStop(1,'rgba(102,153,204,.01)');
 
-  /* 크로스 점 데이터: y2=50 고정으로 항상 잘 보이게 */
-  const c1pts=new Array(ALL_LABELS.length).fill(null);
-  const c2pts=new Array(ALL_LABELS.length).fill(null);
+  // 크로스 점 (y2=50)
+  const c1pts=new Array(n).fill(null);
+  const c2pts=new Array(n).fill(null);
   CROSSES.forEach(cx=>{
     const i=ALL_LABELS.indexOf(cx.date);
-    if(i<0) return;
-    if(cx.type===1) c1pts[i]=50;
-    else            c2pts[i]=50;
+    if(i>=0){ cx.type===1?c1pts[i]=50:c2pts[i]=50; }
   });
 
-  /* 오버레이 플러그인: 위기 음영 + 파동 굵은 선 하이라이트 */
-  const overlayPlugin={id:'overlay', beforeDatasetsDraw(chart){
+  // ── 오늘까지 예측 계산 ──
+  const lastDate=new Date(ALL_LABELS[n-1]);
+  const today=new Date();
+  const daysDiff=Math.max(0,Math.round((today-lastDate)/(1000*60*60*24)));
+  const predWeeks=Math.max(1,Math.min(Math.ceil(daysDiff/7),5));
+
+  function linForecast(arr,weeks){
+    const vals=arr.filter(v=>v!=null&&!isNaN(v));
+    if(vals.length<4) return [];
+    const recent=arr.slice(-8).filter(v=>v!=null&&!isNaN(v));
+    const slope=(recent[recent.length-1]-recent[0])/(recent.length-1||1);
+    const last=recent[recent.length-1];
+    return Array.from({length:weeks},(_,i)=>Math.max(0,Math.min(100,last+slope*(i+1))));
+  }
+  const predSell=linForecast(ALL_SELL,predWeeks);
+  const predBuy =linForecast(ALL_BUY, predWeeks);
+
+  const predLabels=[];
+  for(let w=1;w<=predWeeks;w++){
+    const d=new Date(lastDate); d.setDate(d.getDate()+w*7);
+    predLabels.push(d.toISOString().slice(0,10));
+  }
+
+  const extLabels=[...ALL_LABELS,...predLabels];
+  const extSell=[...ALL_SELL,...predSell];
+  const extBuy =[...ALL_BUY, ...predBuy];
+  const extC1=[...c1pts,...new Array(predWeeks).fill(null)];
+  const extC2=[...c2pts,...new Array(predWeeks).fill(null)];
+
+  // 포지션 라벨
+  function getPosLabel(type,area){
+    if(type===1){
+      if(area<200) return {txt:'▲ 100% 매수',col:'#00e87a'};
+      if(area<500) return {txt:'▲ 50% 매수', col:'#ffb830'};
+      return               {txt:'▲ 20% 매수', col:'#ff8844'};
+    }else{
+      if(area<200) return {txt:'▼ 홀드',      col:'#00d4ff'};
+      if(area<500) return {txt:'▼ 50% 매도',  col:'#ffb830'};
+      return               {txt:'▼ 전량 매도', col:'#ff3344'};
+    }
+  }
+
+  const overlayPlugin={id:'overlay',beforeDatasetsDraw(chart){
     const{ctx:c,chartArea:{left,right,top,bottom},scales:{x,y2}}=chart;
+    const tot=extLabels.length;
     c.save();
 
-    /* 1) 위기 음영 (매도≥72) */
+    // 1) AREA 색칠
+    const cIdxs=[0,...CROSSES.map(cx=>{
+      const i=extLabels.indexOf(cx.date); return i>=0?i:null;
+    }).filter(i=>i!=null),tot-1];
+
+    for(let bi=0;bi<cIdxs.length-1;bi++){
+      const s=cIdxs[bi],e=cIdxs[bi+1];
+      const mid=Math.floor((s+e)/2);
+      const sv=extSell[mid],bv=extBuy[mid];
+      if(sv==null||bv==null) continue;
+      const isRed=sv>bv;
+      c.beginPath();
+      c.fillStyle=isRed?'rgba(255,51,68,.18)':'rgba(0,232,122,.15)';
+      let ok=false;
+      for(let i=s;i<=e;i++){
+        const v=extSell[i]; if(v==null) continue;
+        try{const px=x.getPixelForValue(i),py=y2.getPixelForValue(v);
+          ok?(c.lineTo(px,py)):(c.moveTo(px,py),ok=true);}catch(e2){}
+      }
+      for(let i=e;i>=s;i--){
+        const v=extBuy[i]; if(v==null) continue;
+        try{c.lineTo(x.getPixelForValue(i),y2.getPixelForValue(v));}catch(e2){}
+      }
+      c.closePath(); c.fill();
+    }
+
+    // 2) 위기 음영
     let inE=false,sx=0;
     ALL_SELL.forEach((v,i)=>{
       try{
@@ -1382,72 +1449,119 @@ function mainChart(){
         if(v>=72&&!inE){inE=true;sx=xp;}
         if((v==null||v<72)&&inE){
           const eg=c.createLinearGradient(sx,0,xp,0);
-          eg.addColorStop(0,'rgba(255,51,68,.0)');
-          eg.addColorStop(.5,'rgba(255,51,68,.12)');
-          eg.addColorStop(1,'rgba(255,51,68,.0)');
+          eg.addColorStop(0,'rgba(255,51,68,0)');
+          eg.addColorStop(.5,'rgba(255,51,68,.18)');
+          eg.addColorStop(1,'rgba(255,51,68,0)');
           c.fillStyle=eg; c.fillRect(sx,top,xp-sx,bottom-top); inE=false;
         }
-      }catch(e){}
+      }catch(e2){}
     });
-    if(inE){c.fillStyle='rgba(255,51,68,.1)';c.fillRect(sx,top,right-sx,bottom-top);}
+    if(inE){c.fillStyle='rgba(255,51,68,.12)';c.fillRect(sx,top,right-sx,bottom-top);}
 
-    /* 2) 파동 하이라이트 */
+    // 3) 크로스 포지션 텍스트
+    const nd=computeNodes();
+    CROSSES.forEach((cx,ci)=>{
+      const i=extLabels.indexOf(cx.date); if(i<0) return;
+      const prevArea=nd[ci]?nd[ci].area:0;
+      const pos=getPosLabel(cx.type,prevArea);
+      try{
+        const px=x.getPixelForValue(i);
+        const py=y2.getPixelForValue(50);
+        c.save();
+        c.font='bold 10px "Space Mono",monospace';
+        c.textAlign='center';
+        const ty=cx.type===1?py-22:py+30;
+        const tw=c.measureText(pos.txt).width+10;
+        c.fillStyle='rgba(6,10,15,.88)';
+        c.fillRect(px-tw/2,ty-13,tw,17);
+        c.fillStyle=pos.col;
+        c.fillText(pos.txt,px,ty);
+        c.restore();
+      }catch(e2){}
+    });
+
+    // 4) 파동 하이라이트
     if(WAVE_HL){
       const{start,end}=WAVE_HL;
       try{
-        const x1=x.getPixelForValue(start), x2=x.getPixelForValue(end);
-        /* 배경 */
+        const x1=x.getPixelForValue(start),x2=x.getPixelForValue(end);
         c.fillStyle='rgba(255,255,255,.05)';
         c.fillRect(x1,top,x2-x1,bottom-top);
-        /* 점선 테두리 */
         c.strokeStyle='rgba(255,255,255,.2)';
         c.lineWidth=1; c.setLineDash([4,3]);
         c.strokeRect(x1,top,x2-x1,bottom-top);
         c.setLineDash([]);
-        /* 굵은 매도선 */
         c.beginPath(); c.strokeStyle='rgba(255,51,68,1)'; c.lineWidth=3.5;
         let first=true;
         for(let i=start;i<=end;i++){
-          if(ALL_SELL[i]==null) continue;
-          const px=x.getPixelForValue(i), py=y2.getPixelForValue(ALL_SELL[i]);
-          first?(c.moveTo(px,py),first=false):c.lineTo(px,py);
+          const v=extSell[i]; if(v==null) continue;
+          try{const px=x.getPixelForValue(i),py=y2.getPixelForValue(v);
+            first?(c.moveTo(px,py),first=false):c.lineTo(px,py);}catch(e2){}
         }
         c.stroke();
-        /* 굵은 매수선 */
         c.beginPath(); c.strokeStyle='rgba(0,232,122,1)'; c.lineWidth=3.5;
         first=true;
         for(let i=start;i<=end;i++){
-          if(ALL_BUY[i]==null) continue;
-          const px=x.getPixelForValue(i), py=y2.getPixelForValue(ALL_BUY[i]);
-          first?(c.moveTo(px,py),first=false):c.lineTo(px,py);
+          const v=extBuy[i]; if(v==null) continue;
+          try{const px=x.getPixelForValue(i),py=y2.getPixelForValue(v);
+            first?(c.moveTo(px,py),first=false):c.lineTo(px,py);}catch(e2){}
         }
         c.stroke();
-      }catch(e){}
+      }catch(e2){}
     }
+
+    // 5) 예측 구분선
+    try{
+      const xp=x.getPixelForValue(n-1);
+      c.save();
+      c.setLineDash([5,4]);
+      c.strokeStyle='rgba(255,255,255,.15)';
+      c.lineWidth=1;
+      c.beginPath(); c.moveTo(xp,top); c.lineTo(xp,bottom); c.stroke();
+      c.setLineDash([]);
+      c.fillStyle='rgba(255,255,255,.3)';
+      c.font='9px Space Mono';
+      c.textAlign='right'; c.fillText('◀ 확정',xp-4,top+12);
+      c.textAlign='left';  c.fillText('예측 ▶',xp+4,top+12);
+      c.restore();
+    }catch(e2){}
+
     c.restore();
   }};
 
   if(MC) MC.destroy();
   MC=new Chart(ctx,{
     type:'line', plugins:[overlayPlugin],
-    data:{labels:ALL_LABELS, datasets:[
-      {label:'SP500', data:pNorm,
-       borderColor:'rgba(102,153,204,.9)', backgroundColor:grad,
-       borderWidth:2.5, pointRadius:0, tension:.4, fill:true, yAxisID:'y'},
-      {label:'매도', data:ALL_SELL,
-       borderColor:'rgba(255,51,68,.95)', backgroundColor:'transparent',
-       borderWidth:2, pointRadius:0, tension:.3, yAxisID:'y2'},
-      {label:'매수', data:ALL_BUY,
-       borderColor:'rgba(0,232,122,.95)', backgroundColor:'transparent',
-       borderWidth:2, pointRadius:0, tension:.3, yAxisID:'y2'},
-      /* TYPE1 크로스 점 (청록, y2=50 고정) */
-      {label:'TYPE1', data:c1pts, type:'scatter',
-       backgroundColor:'rgba(0,212,255,.85)', borderColor:'#00d4ff', borderWidth:2,
-       pointRadius:8, pointHoverRadius:11, pointStyle:'circle', yAxisID:'y2'},
-      /* TYPE2 크로스 점 (붉은, y2=50 고정) */
-      {label:'TYPE2', data:c2pts, type:'scatter',
-       backgroundColor:'rgba(255,51,68,.85)', borderColor:'#ff3344', borderWidth:2,
-       pointRadius:8, pointHoverRadius:11, pointStyle:'circle', yAxisID:'y2'},
+    data:{labels:extLabels, datasets:[
+      {label:'SP500',data:[...pNorm,...new Array(predWeeks).fill(null)],
+       borderColor:'rgba(102,153,204,.9)',backgroundColor:grad,
+       borderWidth:2.5,pointRadius:0,tension:.4,fill:true,yAxisID:'y'},
+      {label:'매도',data:[...ALL_SELL,...new Array(predWeeks).fill(null)],
+       borderColor:'rgba(255,51,68,.95)',backgroundColor:'transparent',
+       borderWidth:2,pointRadius:0,tension:.3,yAxisID:'y2'},
+      {label:'매수',data:[...ALL_BUY,...new Array(predWeeks).fill(null)],
+       borderColor:'rgba(0,232,122,.95)',backgroundColor:'transparent',
+       borderWidth:2,pointRadius:0,tension:.3,yAxisID:'y2'},
+      {label:'매도예측',
+       data:[...new Array(n-1).fill(null),ALL_SELL[n-1],...predSell],
+       borderColor:'rgba(255,80,80,.6)',backgroundColor:'transparent',
+       borderWidth:2,borderDash:[6,4],
+       pointRadius:[...new Array(n).fill(0),...new Array(predWeeks).fill(3)],
+       pointBackgroundColor:'rgba(255,80,80,.7)',
+       tension:.3,yAxisID:'y2'},
+      {label:'매수예측',
+       data:[...new Array(n-1).fill(null),ALL_BUY[n-1],...predBuy],
+       borderColor:'rgba(0,232,122,.55)',backgroundColor:'transparent',
+       borderWidth:2,borderDash:[6,4],
+       pointRadius:[...new Array(n).fill(0),...new Array(predWeeks).fill(3)],
+       pointBackgroundColor:'rgba(0,232,122,.65)',
+       tension:.3,yAxisID:'y2'},
+      {label:'TYPE1',data:extC1,type:'scatter',
+       backgroundColor:'rgba(0,212,255,.85)',borderColor:'#00d4ff',borderWidth:2,
+       pointRadius:8,pointHoverRadius:11,yAxisID:'y2'},
+      {label:'TYPE2',data:extC2,type:'scatter',
+       backgroundColor:'rgba(255,51,68,.85)',borderColor:'#ff3344',borderWidth:2,
+       pointRadius:8,pointHoverRadius:11,yAxisID:'y2'},
     ]},
     options:{
       responsive:true,
@@ -1458,17 +1572,19 @@ function mainChart(){
         tooltip:{
           enabled:false,
           external(c2){
-            if(c2.tooltip.opacity===0) return;
-            if(crossTipOn) return;
+            if(c2.tooltip.opacity===0||crossTipOn) return;
             const idx=c2.tooltip.dataPoints[0]?.dataIndex; if(idx==null) return;
-            const p=ALL_PRICES[idx], s=ALL_SELL[idx], b=ALL_BUY[idx];
+            const isPred=idx>=n;
+            const p=idx<n?ALL_PRICES[idx]:null;
+            const s=extSell[idx],b=extBuy[idx];
             const sc=s>=72?'var(--red)':s>=58?'var(--yel)':'var(--cyn)';
             const bc=b>=65?'var(--grn)':b>=45?'var(--cyn)':'var(--mut)';
             document.getElementById('chart-info').innerHTML=`
-              <div class="ci">날짜<span>${ALL_LABELS[idx]}</span></div>
-              <div class="ci">S&amp;P500<span style="color:#6699cc">$${p?.toLocaleString()||'--'}</span></div>
-              <div class="ci">매도위험<span style="color:${sc}">${s?.toFixed(1)||'--'}</span></div>
-              <div class="ci">매수안전<span style="color:${bc}">${b?.toFixed(1)||'--'}</span></div>`;
+              <div class="ci">날짜<span>${extLabels[idx]}${isPred?' <span style="color:var(--yel)">(예측)</span>':''}</span></div>
+              ${p?`<div class="ci">S&P500<span style="color:#6699cc">$${p.toLocaleString()}</span></div>`:''}
+              <div class="ci">매도위험<span style="color:${sc}">${s!=null?s.toFixed(1):'--'}</span></div>
+              <div class="ci">매수안전<span style="color:${bc}">${b!=null?b.toFixed(1):'--'}</span></div>
+              ${isPred?'<div class="ci" style="color:var(--mut);font-size:11px">* 추세 기반 예측값</div>':''}`;
           }
         },
         zoom:{
@@ -1478,13 +1594,9 @@ function mainChart(){
         }
       },
       scales:{
-        x:{ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
-            maxTicksLimit:14,
-            callback:function(val,i){
-              try{
-                const lbl=this.getLabelForValue(val);
-                return lbl?lbl.slice(0,7):'';
-              }catch(e){return '';}
+        x:{ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',maxTicksLimit:14,
+            callback:function(val){
+              try{const l=this.getLabelForValue(val);return l?l.slice(0,7):'';}catch(e){return '';}
             }},
            grid:{color:'rgba(30,48,72,.4)'}},
         y:{position:'right',ticks:{font:{family:'Space Mono',size:10},color:'#7090a8',
@@ -1494,61 +1606,56 @@ function mainChart(){
       },
       onHover:(e,els,chart)=>{
         if(!e.native) return;
-        /* 크로스 점 위에 있는지 먼저 확인 (dataset 3,4) */
         const cEls=chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},true)
-                        .filter(el=>el.datasetIndex>=3);
+                        .filter(el=>el.datasetIndex>=5);
         if(cEls.length>0){
           const idx=cEls[0].index;
-          const info=CROSS_MAP[ALL_LABELS[idx]];
+          const info=CROSS_MAP[extLabels[idx]];
           if(info){
-            WAVE_HL={start:info.waveStart, end:info.waveEnd};
+            WAVE_HL={start:info.waveStart,end:info.waveEnd};
             MC.update('none');
-            showCrossTip(e.native.clientX, e.native.clientY, info);
-            hideTooltip();
-            return;
+            showCrossTip(e.native.clientX,e.native.clientY,info);
+            hideTooltip(); return;
           }
         }
-        /* 크로스 점 아닌 곳 */
-        if(crossTipOn){ hideCrossTip(); }
+        if(crossTipOn) hideCrossTip();
         const pts=chart.getElementsAtEventForMode(e.native,'index',{intersect:false},true);
         if(pts.length===0){
           if(e.native.type==='mousemove'||e.native.type==='mouseout') hideTooltip();
           return;
         }
-        showTooltip(e.native.clientX, e.native.clientY, pts[0].index);
+        showTooltip(e.native.clientX,e.native.clientY,pts[0].index);
       }
     }
   });
 
-  /* mouseleave */
   document.getElementById('mc').addEventListener('mouseleave',()=>{
     hideTooltip(); hideCrossTip();
   });
 
-  /* 모바일 터치: 크로스 점 탭 */
   document.getElementById('mc').addEventListener('touchend',function(e){
     e.preventDefault();
     const touch=e.changedTouches[0];
     const rect=this.getBoundingClientRect();
-    const fake={clientX:touch.clientX, clientY:touch.clientY,
-                offsetX:touch.clientX-rect.left, offsetY:touch.clientY-rect.top, target:this};
+    const fake={clientX:touch.clientX,clientY:touch.clientY,
+                offsetX:touch.clientX-rect.left,offsetY:touch.clientY-rect.top,target:this};
     const cEls=MC.getElementsAtEventForMode(fake,'nearest',{intersect:true},true)
-                  .filter(el=>el.datasetIndex>=3);
+                  .filter(el=>el.datasetIndex>=5);
     if(cEls.length>0){
       const idx=cEls[0].index;
-      const info=CROSS_MAP[ALL_LABELS[idx]];
+      const info=CROSS_MAP[extLabels[idx]];
       if(info){
-        WAVE_HL={start:info.waveStart, end:info.waveEnd};
+        WAVE_HL={start:info.waveStart,end:info.waveEnd};
         MC.update('none');
-        showCrossTip(touch.clientX, touch.clientY, info);
+        showCrossTip(touch.clientX,touch.clientY,info);
         hideTooltip(); return;
       }
     }
-    /* 일반 터치 */
     const pts=MC.getElementsAtEventForMode(fake,'index',{intersect:false},true);
-    if(pts.length>0) showTooltip(touch.clientX, touch.clientY, pts[0].index);
+    if(pts.length>0) showTooltip(touch.clientX,touch.clientY,pts[0].index);
   },{passive:false});
 }
+
 
 function setRange(days,btn){
   document.querySelectorAll('.rbtn').forEach(b=>b.classList.remove('on'));
