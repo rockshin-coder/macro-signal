@@ -540,6 +540,102 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     </div>
   </div>
 
+  <!-- ★ AREA 포지션 가이드 -->
+  <div class="card sec">
+    <div class="ch">
+      <span>⚡ AREA 분석 — 포지션 사이징 가이드</span>
+      <span style="font-size:11px;color:var(--mut)">붉은/녹색 구간 면적 기반 전략</span>
+    </div>
+
+    <!-- 현재 상태 4개 박스 -->
+    <div style="padding:16px 18px;border-bottom:1px solid rgba(30,48,72,.5)">
+      <div class="area-status-row">
+        <div class="area-stat-box" id="area-cur-box">
+          <div class="area-stat-label">현재 구간</div>
+          <div class="area-stat-val" id="area-cur-type">--</div>
+          <div class="area-stat-sub" id="area-cur-weeks">-- 주 진행중</div>
+        </div>
+        <div class="area-stat-box">
+          <div class="area-stat-label">누적 Area</div>
+          <div class="area-stat-val" id="area-cur-val" style="color:var(--cyn)">--</div>
+          <div class="area-stat-sub">pt·주 (이번 구간)</div>
+        </div>
+        <div class="area-stat-box area-pos-box" id="area-pos-box">
+          <div class="area-stat-label">크로스 시 권장 포지션</div>
+          <div class="area-stat-val" id="area-pos-val">--%</div>
+          <div class="area-stat-sub" id="area-pos-reason">--</div>
+        </div>
+        <div class="area-stat-box">
+          <div class="area-stat-label">현재 스프레드</div>
+          <div class="area-stat-val" id="area-spread-val" style="color:var(--yel)">--</div>
+          <div class="area-stat-sub">매도 - 매수</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전략 테이블 -->
+    <div style="padding:16px 18px">
+      <div style="font-family:'Space Mono';font-size:11px;color:var(--cyn);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">
+        📋 Area 기반 포지션 전략 룰
+      </div>
+      <div class="scroll">
+        <table class="wtbl" style="min-width:600px">
+          <thead>
+            <tr>
+              <th>시점</th>
+              <th>직전 구간 Area</th>
+              <th>권장 포지션</th>
+              <th>근거</th>
+              <th>기대 수익</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:rgba(0,212,255,.04)">
+              <td style="color:var(--cyn);font-weight:700" rowspan="3">TYPE1 크로스<br><span style="font-size:10px;color:var(--mut);font-weight:400">매도↓ → 매수 시점</span></td>
+              <td style="color:var(--sub)">RED area &lt; 200pt·주<br><span style="font-size:10px;color:var(--mut)">(소형 위기)</span></td>
+              <td><span class="wbadge" style="background:rgba(0,232,122,.2);color:var(--grn);border:1px solid rgba(0,232,122,.4);font-size:13px">100% 풀매수</span></td>
+              <td style="font-size:11px;color:var(--sub)">뒤따르는 GREEN avg 4.0x<br>상승 여력 가장 큼</td>
+              <td style="color:var(--grn);font-weight:700">+3~5%<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--sub)">RED area 200~500pt·주<br><span style="font-size:10px;color:var(--mut)">(중형 위기)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,184,48,.15);color:var(--yel);border:1px solid rgba(255,184,48,.3);font-size:13px">50% 절반매수</span></td>
+              <td style="font-size:11px;color:var(--sub)">반등 GREEN avg 0.20x<br>반등이 약함 주의</td>
+              <td style="color:var(--yel);font-weight:700">+1~2%<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
+            </tr>
+            <tr style="background:rgba(255,51,68,.03)">
+              <td style="color:var(--sub)">RED area &gt; 500pt·주<br><span style="font-size:10px;color:var(--mut)">(대형 위기)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,51,68,.15);color:var(--red);border:1px solid rgba(255,51,68,.3);font-size:13px">20~30% 소량</span></td>
+              <td style="font-size:11px;color:var(--sub)">반등 GREEN avg 0.03x<br>위기 진행중 가능성</td>
+              <td style="color:var(--red);font-weight:700">불확실<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
+            </tr>
+            <tr style="background:rgba(255,51,68,.03)">
+              <td style="color:var(--red);font-weight:700" rowspan="3">TYPE2 크로스<br><span style="font-size:10px;color:var(--mut);font-weight:400">매도↑ → 매도 시점</span></td>
+              <td style="color:var(--sub)">GREEN area &lt; 200pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 초기)</span></td>
+              <td><span class="wbadge" style="background:rgba(0,212,255,.12);color:var(--cyn);border:1px solid rgba(0,212,255,.3);font-size:13px">홀드 유지</span></td>
+              <td style="font-size:11px;color:var(--sub)">아직 상승 초기<br>매도 신호 약함</td>
+              <td style="color:var(--cyn);font-weight:700">관망</td>
+            </tr>
+            <tr>
+              <td style="color:var(--sub)">GREEN area 200~500pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 중반)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,184,48,.15);color:var(--yel);border:1px solid rgba(255,184,48,.3);font-size:13px">50% 절반매도</span></td>
+              <td style="font-size:11px;color:var(--sub)">상승분 일부 확보<br>추가 상승 여지 있음</td>
+              <td style="color:var(--yel);font-weight:700">수익 실현</td>
+            </tr>
+            <tr style="background:rgba(255,51,68,.03)">
+              <td style="color:var(--sub)">GREEN area &gt; 500pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 과열)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,51,68,.15);color:var(--red);border:1px solid rgba(255,51,68,.3);font-size:13px">전량 매도</span></td>
+              <td style="font-size:11px;color:var(--sub)">상관계수 +0.75<br>area 클수록 하락 위험</td>
+              <td style="color:var(--red);font-weight:700">리스크 차단</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:10px">
+        ⚠ 근거: RED area↔S&P 상관계수 -0.803 / GREEN area↔S&P 상관계수 +0.754 / 2004~2026 분석 (159개 구간)
+      </div>
+    </div>
+  </div>
 
   <!-- 적중률 + 예측력 -->
   <div class="r3 sec">
@@ -633,19 +729,88 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     </div>
   </div>
 
-  <!-- 히트맵 -->
+  <!-- 지표 구성 설명 -->
   <div class="card sec">
     <div class="ch">
-      <span>적중률 히트맵</span>
-      <span style="color:var(--sub);font-size:11px">과거 전수 데이터 기반</span>
+      <span>📊 매도/매수 점수 구성 지표</span>
+      <span style="color:var(--sub);font-size:11px">각 선이 어떤 데이터로 만들어지는지</span>
     </div>
     <div class="cb">
-      <div class="slbl">▼ SELL 위험점수 → N주 후 하락(-2%↓) 확률</div>
-      <!-- 4번 요청: 히트맵도 가로 스크롤 -->
-      <div class="scroll" id="sell-hm"></div>
-      <div style="height:20px"></div>
-      <div class="slbl">▼ BUY 안전점수 → N주 후 상승(+2%↑) 확률</div>
-      <div class="scroll" id="buy-hm"></div>
+
+      <!-- 붉은선 -->
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)"></span>
+          <span style="font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;color:var(--red)">매도 위험점수 — 붉은선</span>
+          <span style="font-family:'Space Mono';font-size:11px;color:var(--mut)">높을수록 위험 / ≥72점 → SELL 시그널</span>
+        </div>
+        <div class="scroll">
+          <table class="wtbl" style="min-width:580px">
+            <thead>
+              <tr>
+                <th style="width:180px">지표명</th>
+                <th style="width:70px;text-align:center">가중치</th>
+                <th style="width:110px">위험 방향</th>
+                <th>쉬운 설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:#fff;font-weight:700">VIX (공포지수)</td><td style="text-align:center;color:var(--red);font-weight:700">18%</td><td style="color:var(--sub)">높을수록 위험</td><td style="font-size:12px;color:var(--sub)">시장 공포 수준. 주가 불안정할수록 상승</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">VIX 2주 변화</td><td style="text-align:center;color:var(--red);font-weight:700">12%</td><td style="color:var(--sub)">상승 시 위험</td><td style="font-size:12px;color:var(--sub)">공포가 빠르게 커지는 속도 측정</td></tr>
+              <tr><td style="color:#fff;font-weight:700">크레딧 스프레드</td><td style="text-align:center;color:var(--red);font-weight:700">14%</td><td style="color:var(--sub)">높을수록 위험</td><td style="font-size:12px;color:var(--sub)">BBB회사채 - 국채 금리 차이. 기업 신용위험</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">크레딧 스프레드 2주 변화</td><td style="text-align:center;color:var(--red);font-weight:700">9%</td><td style="color:var(--sub)">상승 시 위험</td><td style="font-size:12px;color:var(--sub)">스프레드가 빠르게 벌어지면 금융 경색 신호</td></tr>
+              <tr><td style="color:#fff;font-weight:700">하이일드 스프레드</td><td style="text-align:center;color:var(--red);font-weight:700">14%</td><td style="color:var(--sub)">높을수록 위험</td><td style="font-size:12px;color:var(--sub)">정크본드 - 국채 차이. 금융위기 전 가장 먼저 급등</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">하이일드 스프레드 2주 변화</td><td style="text-align:center;color:var(--red);font-weight:700">8%</td><td style="color:var(--sub)">상승 시 위험</td><td style="font-size:12px;color:var(--sub)">HY 스프레드 단기 급등 포착</td></tr>
+              <tr><td style="color:#fff;font-weight:700">금융스트레스 지수</td><td style="text-align:center;color:var(--red);font-weight:700">8%</td><td style="color:var(--sub)">높을수록 위험</td><td style="font-size:12px;color:var(--sub)">Fed 발표. 18개 금융지표 종합. 0 이상이면 평균 초과 스트레스</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">TED 스프레드</td><td style="text-align:center;color:var(--red);font-weight:700">6%</td><td style="color:var(--sub)">높을수록 위험</td><td style="font-size:12px;color:var(--sub)">은행 간 대출금리 - 단기국채. 은행 신뢰 측정. 2008년 폭등</td></tr>
+              <tr><td style="color:#fff;font-weight:700">금리 인상 사이클</td><td style="text-align:center;color:var(--red);font-weight:700">6%</td><td style="color:var(--sub)">인상 중이면 위험</td><td style="font-size:12px;color:var(--sub)">13주 대비 0.25% 이상 금리 인상 시 위험 신호</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">수익률 곡선 4주 변화</td><td style="text-align:center;color:var(--red);font-weight:700">5%</td><td style="color:var(--sub)">하락 시 위험</td><td style="font-size:12px;color:var(--sub)">10년물-2년물 스프레드 변화. 역전되면 경기침체 전조</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:8px">
+          ※ 각 지표는 과거 5년(260주) 대비 현재 퍼센타일로 변환 후 가중 평균 → 0~100점
+        </div>
+      </div>
+
+      <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(30,48,72,.9),transparent);margin:4px 0 20px"></div>
+
+      <!-- 녹색선 -->
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--grn);box-shadow:0 0 8px var(--grn)"></span>
+          <span style="font-family:'Bebas Neue';font-size:20px;letter-spacing:3px;color:var(--grn)">매수 안전점수 — 녹색선</span>
+          <span style="font-family:'Space Mono';font-size:11px;color:var(--mut)">높을수록 안전 / ≥65점 → BUY 시그널</span>
+        </div>
+        <div class="scroll">
+          <table class="wtbl" style="min-width:580px">
+            <thead>
+              <tr>
+                <th style="width:180px">지표명</th>
+                <th style="width:70px;text-align:center">가중치</th>
+                <th style="width:110px">안전 방향</th>
+                <th>쉬운 설명</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:#fff;font-weight:700">VIX (공포지수)</td><td style="text-align:center;color:var(--grn);font-weight:700">15%</td><td style="color:var(--sub)">낮을수록 안전</td><td style="font-size:12px;color:var(--sub)">공포지수 낮으면 시장 안정 → 매수 신호 강화</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">VIX 4주 변화</td><td style="text-align:center;color:var(--grn);font-weight:700">12%</td><td style="color:var(--sub)">하락 시 안전</td><td style="font-size:12px;color:var(--sub)">공포가 진정되는 추세. 고점에서 내려오는 중이면 강한 신호</td></tr>
+              <tr><td style="color:#fff;font-weight:700">크레딧 스프레드</td><td style="text-align:center;color:var(--grn);font-weight:700">12%</td><td style="color:var(--sub)">낮을수록 안전</td><td style="font-size:12px;color:var(--sub)">기업 신용위험 낮으면 경제 건강 신호</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">크레딧 스프레드 4주 변화</td><td style="text-align:center;color:var(--grn);font-weight:700">9%</td><td style="color:var(--sub)">하락 시 안전</td><td style="font-size:12px;color:var(--sub)">4주간 스프레드 좁아지는 추세 = 금융시장 안정화</td></tr>
+              <tr><td style="color:#fff;font-weight:700">하이일드 스프레드</td><td style="text-align:center;color:var(--grn);font-weight:700">12%</td><td style="color:var(--sub)">낮을수록 안전</td><td style="font-size:12px;color:var(--sub)">정크본드 스프레드 낮으면 기업 자금조달 원활 = 경기 확장</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">하이일드 스프레드 4주 변화</td><td style="text-align:center;color:var(--grn);font-weight:700">8%</td><td style="color:var(--sub)">하락 시 안전</td><td style="font-size:12px;color:var(--sub)">HY 스프레드 4주간 좁아지는 추세 = 금융시장 회복</td></tr>
+              <tr><td style="color:#fff;font-weight:700">금리 인하 사이클</td><td style="text-align:center;color:var(--grn);font-weight:700">8%</td><td style="color:var(--sub)">인하 중이면 안전</td><td style="font-size:12px;color:var(--sub)">Fed가 금리 내리면 유동성 공급 → 강력한 매수 신호</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">Fed 자산 4주 변화</td><td style="text-align:center;color:var(--grn);font-weight:700">8%</td><td style="color:var(--sub)">증가 시 안전</td><td style="font-size:12px;color:var(--sub)">연준 대차대조표 증가 = 양적완화(QE) = 시장에 돈이 풀림</td></tr>
+              <tr><td style="color:#fff;font-weight:700">신규 실업급여 4주 변화</td><td style="text-align:center;color:var(--grn);font-weight:700">8%</td><td style="color:var(--sub)">감소 시 안전</td><td style="font-size:12px;color:var(--sub)">실업급여 청구 줄면 고용 탄탄 → 경기 건강 신호</td></tr>
+              <tr style="background:rgba(255,255,255,.02)"><td style="color:#fff;font-weight:700">소비자심리지수 YoY</td><td style="text-align:center;color:var(--grn);font-weight:700">8%</td><td style="color:var(--sub)">상승 시 안전</td><td style="font-size:12px;color:var(--sub)">1년 전보다 소비자 심리 개선되면 경기 회복 신호</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:8px">
+          ※ 데이터 출처: FRED(미국 세인트루이스 연방준비은행) + Yahoo Finance / 매주 토요일 자동 업데이트
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -694,9 +859,9 @@ function render(){
   buildChartData();
   computeCrosses();
   mainChart();
+  areaSection();
   probTable();
   powList(D.indicator_stats);
-  heatmaps(D.hit_rates);
 }
 
 /* ── GAUGES ── */
@@ -1076,6 +1241,58 @@ function drawAreaChart(nodes){
       }
     }]
   });
+}
+
+/* ── AREA 섹션 (박스 + 전략표만, 막대차트 없음) ── */
+function areaSection(){
+  const nodes=computeNodes();
+  if(!nodes.length) return;
+  const cur=nodes[nodes.length-1];
+  const lastSell=ALL_SELL[ALL_SELL.length-1]||0;
+  const lastBuy =ALL_BUY[ALL_BUY.length-1]||0;
+  const curSpread=lastSell-lastBuy;
+
+  const typeEl=document.getElementById('area-cur-type');
+  const boxEl =document.getElementById('area-cur-box');
+  if(!typeEl) return;
+  if(cur.type==='RED'){
+    typeEl.textContent='RED 구간'; typeEl.style.color='var(--red)';
+    boxEl.style.borderColor='rgba(255,51,68,.4)';
+    boxEl.style.background='rgba(255,51,68,.06)';
+  } else {
+    typeEl.textContent='GREEN 구간'; typeEl.style.color='var(--grn)';
+    boxEl.style.borderColor='rgba(0,232,122,.4)';
+    boxEl.style.background='rgba(0,232,122,.06)';
+  }
+  document.getElementById('area-cur-weeks').textContent=`${cur.weeks}주 진행중`;
+  const aEl=document.getElementById('area-cur-val');
+  aEl.textContent=cur.area.toFixed(0);
+  aEl.style.color=cur.type==='RED'?'var(--red)':'var(--grn)';
+
+  const spEl=document.getElementById('area-spread-val');
+  spEl.textContent=(curSpread>=0?'+':'')+curSpread.toFixed(1);
+  spEl.style.color=curSpread>0?'var(--red)':curSpread<0?'var(--grn)':'var(--mut)';
+
+  const posEl=document.getElementById('area-pos-val');
+  const reaEl=document.getElementById('area-pos-reason');
+  const pboxEl=document.getElementById('area-pos-box');
+  const a=cur.area;
+  let pos,reason,col;
+  if(cur.type==='RED'){
+    if(a<200){pos='100% 매수';reason='소형위기 → 풀매수 준비';col='var(--grn)';}
+    else if(a<500){pos='50% 매수';reason='중형위기 → 절반매수 준비';col='var(--yel)';}
+    else{pos='20~30%';reason='대형위기 → 소량매수 준비';col='var(--red)';}
+  } else {
+    if(a<200){pos='홀드';reason='상승초기 → 유지';col='var(--cyn)';}
+    else if(a<500){pos='50% 매도';reason='상승중반 → 절반 실현';col='var(--yel)';}
+    else{pos='전량 매도';reason='상승과열 → 전량 실현';col='var(--red)';}
+  }
+  posEl.textContent=pos; posEl.style.color=col;
+  reaEl.textContent=reason;
+  pboxEl.style.borderColor=
+    col==='var(--grn)'?'rgba(0,232,122,.4)':
+    col==='var(--yel)'?'rgba(255,184,48,.4)':
+    col==='var(--cyn)'?'rgba(0,212,255,.4)':'rgba(255,51,68,.4)';
 }
 
 /* ── 크로스 전용 툴팁 ── */
@@ -1705,34 +1922,6 @@ function probTable(){
 }
 
 /* ── HEATMAPS ── */
-function heatmaps(hr){
-  if(!hr) return;
-  buildHM('sell-hm',hr.sell,'down_prob','sell');
-  buildHM('buy-hm',hr.buy,'up_prob','buy');
-}
-function buildHM(id,data,pk,t){
-  const el=document.getElementById(id); if(!el||!data) return;
-  const hs=[1,2,3,4,5,6,8], bands=data['1']||[];
-  let h=`<table class="ht"><thead><tr>
-    <th>구간</th>${hs.map(x=>`<th>${x}주</th>`).join('')}<th>n</th>
-  </tr></thead><tbody>`;
-  bands.slice().reverse().forEach(b=>{
-    h+=`<tr><td style="color:#fff;font-weight:700;font-size:14px">${b.band}<br>
-      <span style="color:var(--mut);font-size:11px">${b.lo}~${b.hi}</span></td>`;
-    hs.forEach(x=>{
-      const hb=data[x]||[], m=hb.find(q=>q.lo===b.lo&&q.hi===b.hi), p=m?.[pk];
-      if(p==null){h+=`<td style="color:var(--mut)">—</td>`;return;}
-      const col=t==='sell'?(p>65?'var(--red)':p>50?'var(--yel)':'var(--grn)')
-                          :(p>65?'var(--grn)':p>50?'var(--cyn)':'var(--sub)');
-      const bg=t==='sell'?(p>65?'rgba(255,51,68,.22)':p>50?'rgba(255,184,48,.16)':'rgba(0,232,122,.12)')
-                         :(p>65?'rgba(0,232,122,.22)':p>50?'rgba(0,212,255,.16)':'transparent');
-      h+=`<td style="background:${bg}"><span style="color:${col};font-size:14px;font-weight:700">${p.toFixed(0)}%</span></td>`;
-    });
-    h+=`<td style="color:var(--mut);font-size:12px">${b.n}</td></tr>`;
-  });
-  el.innerHTML=h+'</tbody></table>';
-}
-
 /* ── POWER LIST ── */
 function powList(stats){
   const el=document.getElementById('pow-list'); if(!el||!stats) return;
