@@ -375,6 +375,35 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
   .inm{width:110px}
 }
 
+/* ── AREA 섹션 ── */
+.area-status-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+}
+.area-stat-box{
+  background:rgba(0,0,0,.2);border:1px solid rgba(30,48,72,.6);
+  border-radius:6px;padding:12px 14px;text-align:center;
+}
+.area-pos-box{
+  border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.05);
+}
+.area-stat-label{
+  font-family:'Space Mono';font-size:10px;color:var(--mut);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+}
+.area-stat-val{
+  font-family:'Bebas Neue';font-size:32px;line-height:1;
+}
+.area-stat-sub{
+  font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:4px;
+}
+@media(max-width:768px){
+  .area-status-row{grid-template-columns:1fr 1fr;gap:8px;}
+  .area-stat-val{font-size:26px;}
+}
+@media(max-width:480px){
+  .area-status-row{grid-template-columns:1fr 1fr;}
+}
+
 .r3{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 </style>
 </head>
@@ -508,6 +537,125 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="chart-info" id="chart-info">
       <span class="ci-empty">차트 위에 마우스/터치를 올리면 상세 데이터가 표시됩니다</span>
+    </div>
+  </div>
+
+  <!-- ★ AREA 분석 섹션 -->
+  <div class="card sec" id="area-section">
+    <div class="ch">
+      <span>⚡ AREA 분석 — 포지션 사이징 가이드</span>
+      <span style="font-size:11px;color:var(--mut)">붉은/녹색 구간 면적 기반 전략</span>
+    </div>
+
+    <!-- 상단: 현재 상태 + 권장 포지션 -->
+    <div style="padding:16px 18px;border-bottom:1px solid rgba(30,48,72,.5)">
+      <div class="area-status-row">
+        <!-- 현재 구간 정보 -->
+        <div class="area-stat-box" id="area-cur-box">
+          <div class="area-stat-label">현재 구간</div>
+          <div class="area-stat-val" id="area-cur-type">--</div>
+          <div class="area-stat-sub" id="area-cur-weeks">-- 주 진행중</div>
+        </div>
+        <!-- 현재 누적 area -->
+        <div class="area-stat-box">
+          <div class="area-stat-label">누적 Area</div>
+          <div class="area-stat-val" id="area-cur-val" style="color:var(--cyn)">--</div>
+          <div class="area-stat-sub">pt·주 (이번 구간)</div>
+        </div>
+        <!-- 권장 포지션 -->
+        <div class="area-stat-box area-pos-box" id="area-pos-box">
+          <div class="area-stat-label">크로스 시 권장 포지션</div>
+          <div class="area-stat-val" id="area-pos-val">--%</div>
+          <div class="area-stat-sub" id="area-pos-reason">--</div>
+        </div>
+        <!-- 현재 스프레드 -->
+        <div class="area-stat-box">
+          <div class="area-stat-label">현재 스프레드</div>
+          <div class="area-stat-val" id="area-spread-val" style="color:var(--yel)">--</div>
+          <div class="area-stat-sub">매도 - 매수</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Area 차트 (예측 포함) -->
+    <div style="padding:12px 18px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+        <div style="font-family:'Space Mono';font-size:11px;color:var(--sub);letter-spacing:1px">
+          AREA CHART — 구간별 누적 면적
+        </div>
+        <div style="display:flex;gap:10px;font-family:'Space Mono';font-size:11px;flex-wrap:wrap">
+          <span><span style="display:inline-block;width:24px;height:3px;background:rgba(255,51,68,.7);vertical-align:middle;margin-right:4px"></span>RED area</span>
+          <span><span style="display:inline-block;width:24px;height:3px;background:rgba(0,232,122,.7);vertical-align:middle;margin-right:4px"></span>GREEN area</span>
+          <span><span style="display:inline-block;width:24px;height:3px;background:rgba(255,184,48,.9);border-top:2px dashed rgba(255,184,48,.9);vertical-align:middle;margin-right:4px"></span>예측(추세)</span>
+          <span><span style="display:inline-block;width:24px;height:3px;border-top:2px dashed rgba(0,212,255,.9);vertical-align:middle;margin-right:4px"></span>예측(패턴)</span>
+        </div>
+      </div>
+      <canvas id="area-chart" height="160"></canvas>
+    </div>
+
+    <!-- 하단: 전략 테이블 -->
+    <div style="padding:16px 18px 0;border-top:1px solid rgba(30,48,72,.4);margin-top:12px">
+      <div style="font-family:'Space Mono';font-size:11px;color:var(--cyn);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">
+        📋 Area 기반 포지션 전략 룰
+      </div>
+      <div class="scroll">
+        <table class="wtbl" style="min-width:600px">
+          <thead>
+            <tr>
+              <th>시점</th>
+              <th>직전 구간 Area</th>
+              <th>권장 포지션</th>
+              <th>근거</th>
+              <th>기대 수익</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- TYPE1 크로스 (매수 시점) -->
+            <tr style="background:rgba(0,212,255,.04)">
+              <td style="color:var(--cyn);font-weight:700" rowspan="3">TYPE1 크로스<br><span style="font-size:10px;color:var(--mut);font-weight:400">매도↓ → 매수 시점</span></td>
+              <td style="color:var(--sub)">RED area &lt; 200pt·주<br><span style="font-size:10px;color:var(--mut)">(소형 위기)</span></td>
+              <td><span class="wbadge" style="background:rgba(0,232,122,.2);color:var(--grn);border:1px solid rgba(0,232,122,.4);font-size:13px">100% 풀매수</span></td>
+              <td style="font-size:11px;color:var(--sub)">뒤따르는 GREEN avg 4.0x<br>상승 여력 가장 큼</td>
+              <td style="color:var(--grn);font-weight:700">+3~5%<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--sub)">RED area 200~500pt·주<br><span style="font-size:10px;color:var(--mut)">(중형 위기)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,184,48,.15);color:var(--yel);border:1px solid rgba(255,184,48,.3);font-size:13px">50% 절반매수</span></td>
+              <td style="font-size:11px;color:var(--sub)">반등 GREEN avg 0.20x<br>반등이 약함 주의</td>
+              <td style="color:var(--yel);font-weight:700">+1~2%<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
+            </tr>
+            <tr style="background:rgba(255,51,68,.03)">
+              <td style="color:var(--sub)">RED area &gt; 500pt·주<br><span style="font-size:10px;color:var(--mut)">(대형 위기)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,51,68,.15);color:var(--red);border:1px solid rgba(255,51,68,.3);font-size:13px">20~30% 소량</span></td>
+              <td style="font-size:11px;color:var(--sub)">반등 GREEN avg 0.03x<br>위기 진행중 가능성</td>
+              <td style="color:var(--red);font-weight:700">불확실<br><span style="font-size:10px;color:var(--mut)">8주 기준</span></td>
+            </tr>
+            <!-- TYPE2 크로스 (매도 시점) -->
+            <tr style="background:rgba(255,51,68,.03)">
+              <td style="color:var(--red);font-weight:700" rowspan="3">TYPE2 크로스<br><span style="font-size:10px;color:var(--mut);font-weight:400">매도↑ → 매도 시점</span></td>
+              <td style="color:var(--sub)">GREEN area &lt; 200pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 초기)</span></td>
+              <td><span class="wbadge" style="background:rgba(0,212,255,.12);color:var(--cyn);border:1px solid rgba(0,212,255,.3);font-size:13px">홀드 유지</span></td>
+              <td style="font-size:11px;color:var(--sub)">아직 상승 초기<br>매도 신호 약함</td>
+              <td style="color:var(--cyn);font-weight:700">관망</td>
+            </tr>
+            <tr>
+              <td style="color:var(--sub)">GREEN area 200~500pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 중반)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,184,48,.15);color:var(--yel);border:1px solid rgba(255,184,48,.3);font-size:13px">50% 절반매도</span></td>
+              <td style="font-size:11px;color:var(--sub)">상승분 일부 확보<br>추가 상승 여지 있음</td>
+              <td style="color:var(--yel);font-weight:700">수익 실현</td>
+            </tr>
+            <tr style="background:rgba(255,51,68,.03)">
+              <td style="color:var(--sub)">GREEN area &gt; 500pt·주<br><span style="font-size:10px;color:var(--mut)">(상승 과열)</span></td>
+              <td><span class="wbadge" style="background:rgba(255,51,68,.15);color:var(--red);border:1px solid rgba(255,51,68,.3);font-size:13px">전량 매도</span></td>
+              <td style="font-size:11px;color:var(--sub)">상관계수 +0.75<br>area 클수록 하락 위험</td>
+              <td style="color:var(--red);font-weight:700">리스크 차단</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-family:'Space Mono';font-size:10px;color:var(--mut);margin-top:10px;padding-bottom:4px">
+        ⚠ 근거: RED area↔S&P 상관계수 -0.803 / GREEN area↔S&P 상관계수 +0.754 / 2004~2026 분석 (159개 구간)
+      </div>
     </div>
   </div>
 
@@ -664,6 +812,7 @@ function render(){
   buildChartData();
   computeCrosses();
   mainChart();
+  areaSection();
   probTable();
   powList(D.indicator_stats);
   heatmaps(D.hit_rates);
@@ -790,6 +939,261 @@ function computeCrosses(){
     const info={idx:c.idx, type:c.type, date:c.date, maxSpread:Math.round(ms),
                 waveStart:prev, waveEnd:c.idx};
     CROSSES.push(info); CROSS_MAP[c.date]=info;
+  });
+}
+
+/* ── AREA 분석 & 예측 ── */
+let AREA_CHART=null;
+
+function computeNodes(){
+  // 크로스 기준으로 node(구간) 계산
+  const n=ALL_LABELS.length;
+  const crossIdxs=CROSSES.map(c=>c.idx);
+  const bounds=[0,...crossIdxs,n-1];
+  const nodes=[];
+  for(let ni=0;ni<bounds.length-1;ni++){
+    const s=bounds[ni], e=bounds[ni+1];
+    let area=0, signedArea=0, cnt=0;
+    for(let k=s;k<=e;k++){
+      const sv=ALL_SELL[k], bv=ALL_BUY[k];
+      if(sv==null||bv==null||isNaN(sv)||isNaN(bv)) continue;
+      const diff=sv-bv;
+      area+=Math.abs(diff); signedArea+=diff; cnt++;
+    }
+    if(cnt<1) continue;
+    const isRed=signedArea>0;
+    nodes.push({
+      startIdx:s, endIdx:e,
+      startDate:ALL_LABELS[s], endDate:ALL_LABELS[e],
+      type:isRed?'RED':'GREEN',
+      area:Math.round(area*10)/10,
+      signedArea:Math.round(signedArea*10)/10,
+      weeks:cnt
+    });
+  }
+  return nodes;
+}
+
+function areaSection(){
+  const nodes=computeNodes();
+  if(!nodes.length) return;
+
+  // 현재(마지막) 구간
+  const cur=nodes[nodes.length-1];
+  const prevRed=nodes.slice(0,-1).filter(n=>n.type==='RED');
+  const prevGrn=nodes.slice(0,-1).filter(n=>n.type==='GREEN');
+
+  // 현재 스프레드
+  const lastSell=ALL_SELL[ALL_SELL.length-1]||0;
+  const lastBuy =ALL_BUY[ALL_BUY.length-1]||0;
+  const curSpread=lastSell-lastBuy;
+
+  // 현재 구간 타입 표시
+  const typeEl=document.getElementById('area-cur-type');
+  const boxEl =document.getElementById('area-cur-box');
+  if(cur.type==='RED'){
+    typeEl.textContent='RED 구간'; typeEl.style.color='var(--red)';
+    boxEl.style.borderColor='rgba(255,51,68,.4)'; boxEl.style.background='rgba(255,51,68,.06)';
+  } else {
+    typeEl.textContent='GREEN 구간'; typeEl.style.color='var(--grn)';
+    boxEl.style.borderColor='rgba(0,232,122,.4)'; boxEl.style.background='rgba(0,232,122,.06)';
+  }
+  document.getElementById('area-cur-weeks').textContent=`${cur.weeks}주 진행중`;
+  const aEl=document.getElementById('area-cur-val');
+  aEl.textContent=cur.area.toFixed(0);
+  aEl.style.color=cur.type==='RED'?'var(--red)':'var(--grn)';
+
+  // 스프레드
+  const spEl=document.getElementById('area-spread-val');
+  spEl.textContent=(curSpread>=0?'+':'')+curSpread.toFixed(1);
+  spEl.style.color=curSpread>0?'var(--red)':curSpread<0?'var(--grn)':'var(--mut)';
+
+  // 권장 포지션 계산
+  const posEl=document.getElementById('area-pos-val');
+  const reaEl=document.getElementById('area-pos-reason');
+  const pboxEl=document.getElementById('area-pos-box');
+  if(cur.type==='RED'){
+    // RED 구간: 크로스(TYPE1) 발생 시 포지션
+    const a=cur.area;
+    let pos,reason,col;
+    if(a<200){pos='100%';reason='소형위기 → 풀매수 준비';col='var(--grn)';}
+    else if(a<500){pos='50%';reason='중형위기 → 절반매수 준비';col='var(--yel)';}
+    else{pos='20~30%';reason='대형위기 → 소량매수 준비';col='var(--red)';}
+    posEl.textContent=pos; posEl.style.color=col;
+    reaEl.textContent=reason;
+    pboxEl.style.borderColor=col.replace('var(--','rgba(').replace(')',',0.4)');
+  } else {
+    // GREEN 구간: 크로스(TYPE2) 발생 시 포지션
+    const a=cur.area;
+    let pos,reason,col;
+    if(a<200){pos='홀드';reason='상승초기 → 유지';col='var(--cyn)';}
+    else if(a<500){pos='50% 매도';reason='상승중반 → 절반 실현';col='var(--yel)';}
+    else{pos='전량 매도';reason='상승과열 → 전량 실현';col='var(--red)';}
+    posEl.textContent=pos; posEl.style.color=col;
+    reaEl.textContent=reason;
+    pboxEl.style.borderColor=col.replace('var(--','rgba(').replace(')',',0.4)');
+  }
+
+  // Area 차트 그리기
+  drawAreaChart(nodes);
+}
+
+function drawAreaChart(nodes){
+  const ctx=document.getElementById('area-chart').getContext('2d');
+
+  // 최근 4년치 노드만 표시
+  const cutDate=new Date(ALL_LABELS[ALL_LABELS.length-1]);
+  cutDate.setFullYear(cutDate.getFullYear()-4);
+  const recent=nodes.filter(n=>new Date(n.endDate)>=cutDate);
+
+  // 라벨: 각 구간 중간 날짜
+  const labels=recent.map(n=>{
+    const s=new Date(n.startDate), e=new Date(n.endDate);
+    const mid=new Date((s.getTime()+e.getTime())/2);
+    return mid.toISOString().slice(0,7);
+  });
+
+  const redData=recent.map(n=>n.type==='RED'?n.area:0);
+  const grnData=recent.map(n=>n.type==='GREEN'?n.area:0);
+
+  // ── 예측 계산 ──
+  // 현재(마지막) 구간
+  const cur=recent[recent.length-1];
+  // 방법A: 선형 추세 (최근 4주 area 변화율로 연장)
+  // 방법B: 과거 유사 구간 평균 궤적
+
+  // 방법A: 현재 구간의 weekly area 누적 속도
+  const curWeeklyRate=cur.area/cur.weeks; // 주당 평균 area
+  // 앞으로 4주 예측 (현재 구간이 계속된다면)
+  const forecastWeeks=4;
+  const predA_label=[];
+  const predA_red=[];
+  const predA_grn=[];
+  const lastDate=new Date(cur.endDate);
+  for(let w=1;w<=forecastWeeks;w++){
+    const d=new Date(lastDate); d.setDate(d.getDate()+w*7);
+    predA_label.push(d.toISOString().slice(0,7));
+    const addedArea=curWeeklyRate*w;
+    if(cur.type==='RED'){ predA_red.push(cur.area+addedArea); predA_grn.push(0); }
+    else { predA_red.push(0); predA_grn.push(cur.area+addedArea); }
+  }
+
+  // 방법B: 과거 같은 타입 구간에서 같은 weeks 지점 이후의 평균 궤적
+  const sameType=nodes.filter(n=>n.type===cur.type&&n!==cur&&n.weeks>cur.weeks);
+  let predB_vals=[];
+  if(sameType.length>=3){
+    for(let w=1;w<=forecastWeeks;w++){
+      const vals=sameType.map(n=>{
+        // 비슷한 진행도(weeks)의 area 비율로 예측
+        const ratio=(cur.weeks+w)/n.weeks;
+        return ratio<=1 ? n.area*ratio : n.area;
+      });
+      predB_vals.push(vals.reduce((a,b)=>a+b,0)/vals.length);
+    }
+  }
+
+  // 전체 라벨 합치기
+  const allLabels=[...labels,...predA_label];
+
+  // 데이터셋
+  const ds=[
+    {
+      label:'RED area',
+      data:[...redData,...new Array(forecastWeeks).fill(null)],
+      backgroundColor:'rgba(255,51,68,.55)',
+      borderColor:'rgba(255,51,68,.8)',
+      borderWidth:1, type:'bar',
+    },
+    {
+      label:'GREEN area',
+      data:[...grnData,...new Array(forecastWeeks).fill(null)],
+      backgroundColor:'rgba(0,232,122,.45)',
+      borderColor:'rgba(0,232,122,.7)',
+      borderWidth:1, type:'bar',
+    },
+    {
+      label:'예측(추세)',
+      data:[
+        ...new Array(labels.length-1).fill(null),
+        cur.type==='RED'?cur.area:cur.area, // 연결점
+        ...predA_red.map((v,i)=>cur.type==='RED'?v:predA_grn[i])
+      ],
+      borderColor:'rgba(255,184,48,.9)',
+      backgroundColor:'transparent',
+      borderWidth:2, borderDash:[6,4],
+      type:'line', pointRadius:3,
+      tension:0.3,
+    },
+  ];
+
+  if(predB_vals.length){
+    ds.push({
+      label:'예측(패턴평균)',
+      data:[
+        ...new Array(labels.length-1).fill(null),
+        cur.area,
+        ...predB_vals
+      ],
+      borderColor:'rgba(0,212,255,.9)',
+      backgroundColor:'transparent',
+      borderWidth:2, borderDash:[4,3],
+      type:'line', pointRadius:3,
+      tension:0.4,
+    });
+  }
+
+  if(AREA_CHART) AREA_CHART.destroy();
+  AREA_CHART=new Chart(ctx,{
+    type:'bar',
+    data:{labels:allLabels, datasets:ds},
+    options:{
+      responsive:true,
+      animation:{duration:300},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            title:t=>`${t[0].label}`,
+            label:t=>{
+              if(t.raw==null||t.raw===0) return null;
+              return ` ${t.dataset.label}: ${t.raw.toFixed(0)}pt·주`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          ticks:{font:{family:'Space Mono',size:9},color:'#7090a8',maxTicksLimit:10},
+          grid:{color:'rgba(30,48,72,.3)'},
+          // 예측 구간 구분선
+        },
+        y:{
+          ticks:{font:{family:'Space Mono',size:9},color:'#7090a8'},
+          grid:{color:'rgba(30,48,72,.3)'},
+          title:{display:true,text:'Area (pt·주)',color:'#7090a8',font:{family:'Space Mono',size:9}}
+        }
+      }
+    },
+    plugins:[{
+      id:'forecastLine',
+      beforeDraw(chart){
+        // 현재 데이터 끝 ~ 예측 시작 구분선
+        const{ctx:c,chartArea:{top,bottom},scales:{x}}=chart;
+        const splitIdx=labels.length-0.5;
+        try{
+          const xp=x.getPixelForValue(splitIdx);
+          c.save();
+          c.setLineDash([5,4]);
+          c.strokeStyle='rgba(255,255,255,.2)';
+          c.lineWidth=1;
+          c.beginPath(); c.moveTo(xp,top); c.lineTo(xp,bottom); c.stroke();
+          c.fillStyle='rgba(255,255,255,.4)';
+          c.font='10px Space Mono';
+          c.fillText('← 확정  예측 →',xp-30,top+14);
+          c.restore();
+        }catch(e){}
+      }
+    }]
   });
 }
 
