@@ -101,18 +101,18 @@ def build_pct(df):
     print(f'  {len(pct)}개 완료'); return pd.DataFrame(pct)
 
 SELL_W=[
-    ('vix','high',0.18),('vix_2w','high',0.12),
-    ('credit_spread','high',0.14),('credit_spread_2w','high',0.09),
-    ('hy_spread','high',0.14),('hy_spread_2w','high',0.08),
-    ('fin_stress','high',0.08),('ted_spread','high',0.06),
-    ('rate_hiking','high',0.06),('yield_curve_4w','low',0.05),
+    ('vix','high',0.1240),('vix_2w','high',0.0219),
+    ('credit_spread','high',0.1661),('credit_spread_2w','high',0.1316),
+    ('hy_spread','high',0.0706),('hy_spread_2w','high',0.1450),
+    ('fin_stress','high',0.0590),('ted_spread','high',0.1160),
+    ('rate_hiking','high',0.1000),('yield_curve_4w','low',0.0658),
 ]
 BUY_W=[
-    ('vix','low',0.15),('vix_4w','low',0.12),
-    ('credit_spread','low',0.12),('credit_spread_4w','low',0.09),
-    ('hy_spread','low',0.12),('hy_spread_4w','low',0.08),
-    ('rate_cutting','high',0.08),('fed_assets_4w','high',0.08),
-    ('initial_claims_4w','low',0.08),('consumer_sent_yoy','high',0.08),
+    ('vix','low',0.1365),('vix_4w','low',0.0925),
+    ('credit_spread','low',0.0277),('credit_spread_4w','low',0.0834),
+    ('hy_spread','low',0.2146),('hy_spread_4w','low',0.0870),
+    ('rate_cutting','high',0.0958),('fed_assets_4w','high',0.0806),
+    ('initial_claims_4w','low',0.1160),('consumer_sent_yoy','high',0.0659),
 ]
 
 def sc(row,W):
