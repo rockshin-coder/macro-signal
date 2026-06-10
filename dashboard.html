@@ -540,6 +540,39 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
     </div>
   </div>
 
+  <!-- ★ 크로스 근접도 (나우캐스트) -->
+  <div class="card sec">
+    <div class="ch">
+      <span>🎯 크로스 근접도 — 매일 업데이트</span>
+      <span style="font-size:11px;color:var(--mut)" id="prox-basis">--</span>
+    </div>
+    <div style="padding:16px 18px">
+      <div class="area-status-row">
+        <div class="area-stat-box">
+          <div class="area-stat-label">현재 스프레드</div>
+          <div class="area-stat-val" id="prox-spread">--</div>
+          <div class="area-stat-sub" id="prox-spread-sub">매도 - 매수</div>
+        </div>
+        <div class="area-stat-box">
+          <div class="area-stat-label">수렴 속도</div>
+          <div class="area-stat-val" id="prox-speed" style="font-size:26px;line-height:1.3">--</div>
+          <div class="area-stat-sub" id="prox-speed-sub">최근 4주 평균 변화</div>
+        </div>
+        <div class="area-stat-box">
+          <div class="area-stat-label">예상 크로스</div>
+          <div class="area-stat-val" id="prox-eta" style="font-size:24px;line-height:1.3">--</div>
+          <div class="area-stat-sub" id="prox-eta-sub">--</div>
+        </div>
+        <div class="area-stat-box area-pos-box">
+          <div class="area-stat-label">발생 시 권장 액션</div>
+          <div class="area-stat-val" id="prox-action" style="font-size:22px;line-height:1.4">--</div>
+          <div class="area-stat-sub" id="prox-action-sub">--</div>
+        </div>
+      </div>
+      <div id="prox-daily" style="margin-top:14px"></div>
+    </div>
+  </div>
+
   <!-- ★ AREA 포지션 가이드 -->
   <div class="card sec">
     <div class="ch">
@@ -860,6 +893,7 @@ function render(){
   computeCrosses();
   mainChart();
   areaSection();
+  crossProximity();
   probTable();
   powList(D.indicator_stats);
 }
@@ -989,7 +1023,6 @@ function computeCrosses(){
 }
 
 /* ── AREA 분석 & 예측 ── */
-let AREA_CHART=null;
 
 function computeNodes(){
   // 크로스 기준으로 node(구간) 계산
@@ -1018,229 +1051,6 @@ function computeNodes(){
     });
   }
   return nodes;
-}
-
-function areaSection(){
-  const nodes=computeNodes();
-  if(!nodes.length) return;
-
-  // 현재(마지막) 구간
-  const cur=nodes[nodes.length-1];
-  const prevRed=nodes.slice(0,-1).filter(n=>n.type==='RED');
-  const prevGrn=nodes.slice(0,-1).filter(n=>n.type==='GREEN');
-
-  // 현재 스프레드
-  const lastSell=ALL_SELL[ALL_SELL.length-1]||0;
-  const lastBuy =ALL_BUY[ALL_BUY.length-1]||0;
-  const curSpread=lastSell-lastBuy;
-
-  // 현재 구간 타입 표시
-  const typeEl=document.getElementById('area-cur-type');
-  const boxEl =document.getElementById('area-cur-box');
-  if(cur.type==='RED'){
-    typeEl.textContent='RED 구간'; typeEl.style.color='var(--red)';
-    boxEl.style.borderColor='rgba(255,51,68,.4)'; boxEl.style.background='rgba(255,51,68,.06)';
-  } else {
-    typeEl.textContent='GREEN 구간'; typeEl.style.color='var(--grn)';
-    boxEl.style.borderColor='rgba(0,232,122,.4)'; boxEl.style.background='rgba(0,232,122,.06)';
-  }
-  document.getElementById('area-cur-weeks').textContent=`${cur.weeks}주 진행중`;
-  const aEl=document.getElementById('area-cur-val');
-  aEl.textContent=cur.area.toFixed(0);
-  aEl.style.color=cur.type==='RED'?'var(--red)':'var(--grn)';
-
-  // 스프레드
-  const spEl=document.getElementById('area-spread-val');
-  spEl.textContent=(curSpread>=0?'+':'')+curSpread.toFixed(1);
-  spEl.style.color=curSpread>0?'var(--red)':curSpread<0?'var(--grn)':'var(--mut)';
-
-  // 권장 포지션 계산
-  const posEl=document.getElementById('area-pos-val');
-  const reaEl=document.getElementById('area-pos-reason');
-  const pboxEl=document.getElementById('area-pos-box');
-  if(cur.type==='RED'){
-    // RED 구간: 크로스(TYPE1) 발생 시 포지션
-    const a=cur.area;
-    let pos,reason,col;
-    if(a<200){pos='100%';reason='소형위기 → 풀매수 준비';col='var(--grn)';}
-    else if(a<500){pos='50%';reason='중형위기 → 절반매수 준비';col='var(--yel)';}
-    else{pos='20~30%';reason='대형위기 → 소량매수 준비';col='var(--red)';}
-    posEl.textContent=pos; posEl.style.color=col;
-    reaEl.textContent=reason;
-    pboxEl.style.borderColor=col.replace('var(--','rgba(').replace(')',',0.4)');
-  } else {
-    // GREEN 구간: 크로스(TYPE2) 발생 시 포지션
-    const a=cur.area;
-    let pos,reason,col;
-    if(a<200){pos='홀드';reason='상승초기 → 유지';col='var(--cyn)';}
-    else if(a<500){pos='50% 매도';reason='상승중반 → 절반 실현';col='var(--yel)';}
-    else{pos='전량 매도';reason='상승과열 → 전량 실현';col='var(--red)';}
-    posEl.textContent=pos; posEl.style.color=col;
-    reaEl.textContent=reason;
-    pboxEl.style.borderColor=col.replace('var(--','rgba(').replace(')',',0.4)');
-  }
-
-  // Area 차트 그리기
-  drawAreaChart(nodes);
-}
-
-function drawAreaChart(nodes){
-  const ctx=document.getElementById('area-chart').getContext('2d');
-
-  // 최근 4년치 노드만 표시
-  const cutDate=new Date(ALL_LABELS[ALL_LABELS.length-1]);
-  cutDate.setFullYear(cutDate.getFullYear()-4);
-  const recent=nodes.filter(n=>new Date(n.endDate)>=cutDate);
-
-  // 라벨: 각 구간 중간 날짜
-  const labels=recent.map(n=>{
-    const s=new Date(n.startDate), e=new Date(n.endDate);
-    const mid=new Date((s.getTime()+e.getTime())/2);
-    return mid.toISOString().slice(0,7);
-  });
-
-  const redData=recent.map(n=>n.type==='RED'?n.area:0);
-  const grnData=recent.map(n=>n.type==='GREEN'?n.area:0);
-
-  // ── 예측 계산 ──
-  // 현재(마지막) 구간
-  const cur=recent[recent.length-1];
-  // 방법A: 선형 추세 (최근 4주 area 변화율로 연장)
-  // 방법B: 과거 유사 구간 평균 궤적
-
-  // 방법A: 현재 구간의 weekly area 누적 속도
-  const curWeeklyRate=cur.area/cur.weeks; // 주당 평균 area
-  // 앞으로 4주 예측 (현재 구간이 계속된다면)
-  const forecastWeeks=4;
-  const predA_label=[];
-  const predA_red=[];
-  const predA_grn=[];
-  const lastDate=new Date(cur.endDate);
-  for(let w=1;w<=forecastWeeks;w++){
-    const d=new Date(lastDate); d.setDate(d.getDate()+w*7);
-    predA_label.push(d.toISOString().slice(0,7));
-    const addedArea=curWeeklyRate*w;
-    if(cur.type==='RED'){ predA_red.push(cur.area+addedArea); predA_grn.push(0); }
-    else { predA_red.push(0); predA_grn.push(cur.area+addedArea); }
-  }
-
-  // 방법B: 과거 같은 타입 구간에서 같은 weeks 지점 이후의 평균 궤적
-  const sameType=nodes.filter(n=>n.type===cur.type&&n!==cur&&n.weeks>cur.weeks);
-  let predB_vals=[];
-  if(sameType.length>=3){
-    for(let w=1;w<=forecastWeeks;w++){
-      const vals=sameType.map(n=>{
-        // 비슷한 진행도(weeks)의 area 비율로 예측
-        const ratio=(cur.weeks+w)/n.weeks;
-        return ratio<=1 ? n.area*ratio : n.area;
-      });
-      predB_vals.push(vals.reduce((a,b)=>a+b,0)/vals.length);
-    }
-  }
-
-  // 전체 라벨 합치기
-  const allLabels=[...labels,...predA_label];
-
-  // 데이터셋
-  const ds=[
-    {
-      label:'RED area',
-      data:[...redData,...new Array(forecastWeeks).fill(null)],
-      backgroundColor:'rgba(255,51,68,.55)',
-      borderColor:'rgba(255,51,68,.8)',
-      borderWidth:1, type:'bar',
-    },
-    {
-      label:'GREEN area',
-      data:[...grnData,...new Array(forecastWeeks).fill(null)],
-      backgroundColor:'rgba(0,232,122,.45)',
-      borderColor:'rgba(0,232,122,.7)',
-      borderWidth:1, type:'bar',
-    },
-    {
-      label:'예측(추세)',
-      data:[
-        ...new Array(labels.length-1).fill(null),
-        cur.type==='RED'?cur.area:cur.area, // 연결점
-        ...predA_red.map((v,i)=>cur.type==='RED'?v:predA_grn[i])
-      ],
-      borderColor:'rgba(255,184,48,.9)',
-      backgroundColor:'transparent',
-      borderWidth:2, borderDash:[6,4],
-      type:'line', pointRadius:3,
-      tension:0.3,
-    },
-  ];
-
-  if(predB_vals.length){
-    ds.push({
-      label:'예측(패턴평균)',
-      data:[
-        ...new Array(labels.length-1).fill(null),
-        cur.area,
-        ...predB_vals
-      ],
-      borderColor:'rgba(0,212,255,.9)',
-      backgroundColor:'transparent',
-      borderWidth:2, borderDash:[4,3],
-      type:'line', pointRadius:3,
-      tension:0.4,
-    });
-  }
-
-  if(AREA_CHART) AREA_CHART.destroy();
-  AREA_CHART=new Chart(ctx,{
-    type:'bar',
-    data:{labels:allLabels, datasets:ds},
-    options:{
-      responsive:true,
-      animation:{duration:300},
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            title:t=>`${t[0].label}`,
-            label:t=>{
-              if(t.raw==null||t.raw===0) return null;
-              return ` ${t.dataset.label}: ${t.raw.toFixed(0)}pt·주`;
-            }
-          }
-        }
-      },
-      scales:{
-        x:{
-          ticks:{font:{family:'Space Mono',size:9},color:'#7090a8',maxTicksLimit:10},
-          grid:{color:'rgba(30,48,72,.3)'},
-          // 예측 구간 구분선
-        },
-        y:{
-          ticks:{font:{family:'Space Mono',size:9},color:'#7090a8'},
-          grid:{color:'rgba(30,48,72,.3)'},
-          title:{display:true,text:'Area (pt·주)',color:'#7090a8',font:{family:'Space Mono',size:9}}
-        }
-      }
-    },
-    plugins:[{
-      id:'forecastLine',
-      beforeDraw(chart){
-        // 현재 데이터 끝 ~ 예측 시작 구분선
-        const{ctx:c,chartArea:{top,bottom},scales:{x}}=chart;
-        const splitIdx=labels.length-0.5;
-        try{
-          const xp=x.getPixelForValue(splitIdx);
-          c.save();
-          c.setLineDash([5,4]);
-          c.strokeStyle='rgba(255,255,255,.2)';
-          c.lineWidth=1;
-          c.beginPath(); c.moveTo(xp,top); c.lineTo(xp,bottom); c.stroke();
-          c.fillStyle='rgba(255,255,255,.4)';
-          c.font='10px Space Mono';
-          c.fillText('← 확정  예측 →',xp-30,top+14);
-          c.restore();
-        }catch(e){}
-      }
-    }]
-  });
 }
 
 /* ── AREA 섹션 (박스 + 전략표만, 막대차트 없음) ── */
@@ -1293,6 +1103,164 @@ function areaSection(){
     col==='var(--grn)'?'rgba(0,232,122,.4)':
     col==='var(--yel)'?'rgba(255,184,48,.4)':
     col==='var(--cyn)'?'rgba(0,212,255,.4)':'rgba(255,51,68,.4)';
+}
+
+/* ── 크로스 근접도 (나우캐스트) ── */
+function renderDailyTable(dn){
+  const el=document.getElementById('prox-daily');
+  if(!el) return;
+  if(!dn||!dn.length){ el.innerHTML=''; return; }
+  const rows=dn.slice(-10);
+  // 첫 행의 전일대비 계산용
+  const startIdx=dn.length-rows.length;
+  let prev=null;
+  if(startIdx>0){
+    const p=dn[startIdx-1];
+    if(p.sell!=null&&p.buy!=null) prev=p.sell-p.buy;
+  }
+  let body='';
+  rows.forEach(r=>{
+    const sp=(r.sell!=null&&r.buy!=null)?(r.sell-r.buy):null;
+    const dif=(prev!=null&&sp!=null)?(sp-prev):null;
+    const spCol=sp>0?'var(--red)':'var(--grn)';
+    const dCol=dif==null?'var(--mut)':dif>0.05?'var(--red)':dif<-0.05?'var(--grn)':'var(--mut)';
+    const dTxt=dif==null?'—':(dif>0?'▲ +':dif<0?'▼ ':'─ ')+dif.toFixed(1);
+    body+='<tr>'
+      +'<td style="color:var(--sub)">'+r.date+'</td>'
+      +'<td style="color:var(--red);font-weight:700">'+(r.sell!=null?r.sell.toFixed(1):'--')+'</td>'
+      +'<td style="color:var(--grn);font-weight:700">'+(r.buy!=null?r.buy.toFixed(1):'--')+'</td>'
+      +'<td style="color:'+spCol+';font-weight:700">'+(sp!=null?(sp>=0?'+':'')+sp.toFixed(1):'--')+'</td>'
+      +'<td style="color:'+dCol+'">'+dTxt+'</td>'
+      +'<td style="color:var(--mut)">'+(r.price?('$'+r.price.toLocaleString()):'--')+'</td>'
+      +'</tr>';
+    prev=sp;
+  });
+  el.innerHTML=
+    '<div style="font-family:\'Space Mono\';font-size:10px;color:var(--cyn);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">📅 최근 10거래일 — 일별 나우캐스트</div>'
+    +'<div class="scroll"><table class="wtbl" style="min-width:520px">'
+    +'<thead><tr><th>날짜</th><th>매도점수</th><th>매수점수</th><th>스프레드</th><th>전일 대비</th><th>S&amp;P500</th></tr></thead>'
+    +'<tbody>'+body+'</tbody></table></div>'
+    +'<div style="font-family:\'Space Mono\';font-size:9px;color:var(--mut);margin-top:6px">'
+    +'※ 매일 갱신 지표(VIX·크레딧·하이일드 등) 기반 잠정 점수 — 주간 확정치와 다소 다를 수 있음 · 스프레드 ▲상승=TYPE2 접근, ▼하락=TYPE1 접근</div>';
+}
+
+function crossProximity(){
+  const n=ALL_LABELS.length;
+  if(n<6) return;
+  const lastDate=new Date(ALL_LABELS[n-1]+'T00:00:00');
+  const today=new Date(); today.setHours(0,0,0,0);
+  const provisional=lastDate>=today;
+  const dn=(D&&D.daily_nowcast&&D.daily_nowcast.length)?D.daily_nowcast:null;
+
+  // 데이터 기준 배지
+  const basis=document.getElementById('prox-basis');
+  if(basis){
+    let t='주간: '+ALL_LABELS[n-1]+' '+(provisional
+      ?'<span style="color:var(--yel)">●잠정</span>'
+      :'<span style="color:var(--grn)">●확정</span>');
+    if(dn) t+=' &nbsp;·&nbsp; 일별: '+dn[dn.length-1].date
+      +' <span style="color:var(--yel)">●나우캐스트</span>';
+    basis.innerHTML=t;
+  }
+
+  // 일별 테이블
+  renderDailyTable(dn);
+
+  // 주간 스프레드 시계열
+  const spd=[];
+  for(let i=0;i<n;i++){
+    const s=ALL_SELL[i],b=ALL_BUY[i];
+    spd.push((s==null||b==null||isNaN(s)||isNaN(b))?null:s-b);
+  }
+  const curW=spd[n-1], baseW=spd[n-5];
+
+  const curEl=document.getElementById('prox-spread');
+  const curSub=document.getElementById('prox-spread-sub');
+  const speedEl=document.getElementById('prox-speed');
+  const speedSub=document.getElementById('prox-speed-sub');
+  const etaEl=document.getElementById('prox-eta');
+  const etaSub=document.getElementById('prox-eta-sub');
+  const actEl=document.getElementById('prox-action');
+  const actSub=document.getElementById('prox-action-sub');
+  if(!curEl) return;
+
+  // 현재 스프레드: 일별 나우캐스트 우선
+  let cur=curW, curFrom='주간 '+(ALL_LABELS[n-1]||'');
+  if(dn){
+    const L=dn[dn.length-1];
+    if(L.sell!=null&&L.buy!=null){ cur=L.sell-L.buy; curFrom='일별 '+L.date; }
+  }
+  if(cur==null) return;
+  curEl.textContent=(cur>=0?'+':'')+cur.toFixed(1);
+  curEl.style.color=cur>0?'var(--red)':'var(--grn)';
+  if(curSub) curSub.textContent='매도-매수 · '+curFrom;
+
+  // 수렴 속도: 일별(20거래일=4주) 우선, 없으면 주간 4주
+  let speed=null, spFrom='최근 4주';
+  if(dn&&dn.length>=21){
+    const A=dn[dn.length-1], B=dn[dn.length-21];
+    if(A.sell!=null&&B.sell!=null&&A.buy!=null&&B.buy!=null){
+      speed=((A.sell-A.buy)-(B.sell-B.buy))/4; spFrom='최근 20거래일';
+    }
+  }
+  if(speed==null&&baseW!=null&&curW!=null) speed=(curW-baseW)/4;
+  if(speed==null){
+    speedEl.textContent='--'; etaEl.textContent='--'; return;
+  }
+  speedEl.textContent=(speed>=0?'+':'')+speed.toFixed(2)+'/주';
+  speedEl.style.color=Math.abs(speed)<0.3?'var(--mut)':(speed>0?'var(--red)':'var(--grn)');
+  if(speedSub) speedSub.textContent=spFrom+' 평균 변화';
+
+  // 다가올 크로스 추정 (수렴 중일 때만)
+  let weeks=null, upType=null;
+  if(cur<0&&speed>0.3){ weeks=Math.abs(cur)/speed; upType=2; }      // 매도선이 올라옴 → TYPE2
+  else if(cur>0&&speed<-0.3){ weeks=cur/(-speed); upType=1; }       // 매도선이 내려감 → TYPE1
+
+  // 현재 진행중 구간 area
+  let curArea=0;
+  try{
+    const nodes=computeNodes();
+    if(nodes.length){ curArea=nodes[nodes.length-1].area; }
+  }catch(e){}
+
+  if(weeks==null){
+    etaEl.textContent='멀어지는 중';
+    etaEl.style.color='var(--mut)';
+    etaSub.textContent=cur<0?'GREEN 우위 유지/확대':'RED 우위 유지/확대';
+    actEl.textContent='홀드';
+    actEl.style.color='var(--cyn)';
+    actSub.textContent='현 추세 유지 — 행동 불필요';
+    return;
+  }
+
+  const etaBase=dn?new Date(dn[dn.length-1].date+'T00:00:00'):lastDate;
+  const eta=new Date(etaBase); eta.setDate(eta.getDate()+Math.round(weeks*7));
+  if(weeks<=1.2){
+    etaEl.textContent='임박!';
+    etaEl.style.color='var(--red)';
+  }else if(weeks>26){
+    etaEl.textContent='26주+';
+    etaEl.style.color='var(--mut)';
+  }else{
+    etaEl.textContent='약 '+Math.round(weeks)+'주 후';
+    etaEl.style.color='var(--yel)';
+  }
+  etaSub.textContent=(upType===2?'TYPE2(매도↑) 예상':'TYPE1(매수↓) 예상')
+    +' · ~'+eta.toISOString().slice(0,10);
+
+  // 발생 시 권장 액션 (현재 area 기준)
+  let act,col,sub;
+  if(upType===2){
+    if(curArea<200){act='홀드';col='var(--cyn)';sub='GREEN '+curArea.toFixed(0)+'pt — 상승초기, 매도신호 약함';}
+    else if(curArea<500){act='50% 매도 준비';col='var(--yel)';sub='GREEN '+curArea.toFixed(0)+'pt — 절반 실현';}
+    else{act='전량매도 준비';col='var(--red)';sub='GREEN '+curArea.toFixed(0)+'pt — 과열';}
+  }else{
+    if(curArea<200){act='100% 매수 준비';col='var(--grn)';sub='RED '+curArea.toFixed(0)+'pt — 소형위기';}
+    else if(curArea<500){act='50% 매수 준비';col='var(--yel)';sub='RED '+curArea.toFixed(0)+'pt — 중형위기';}
+    else{act='20% 매수 준비';col='var(--red)';sub='RED '+curArea.toFixed(0)+'pt — 대형위기 주의';}
+  }
+  actEl.textContent=act; actEl.style.color=col;
+  actSub.textContent=sub;
 }
 
 /* ── 크로스 전용 툴팁 ── */
@@ -1552,14 +1520,14 @@ function mainChart(){
           if(sv2!=null&&bv2!=null&&!isNaN(sv2)&&!isNaN(bv2)) areaVal+=Math.abs(sv2-bv2);
         }
         const areaText=Math.round(areaVal)+'pt';
-        const midX=(x1+x2)/2;
+        let midX=(x1+x2)/2;
 
         // y 위치: 두 선 사이 중간
         const midIdx=Math.floor((s+e)/2);
         const sv3=extSell[midIdx]||50, bv3=extBuy[midIdx]||50;
         const py1=y2.getPixelForValue(Math.max(sv3,bv3));
         const py2=y2.getPixelForValue(Math.min(sv3,bv3));
-        const midY=(py1+py2)/2;
+        let midY=(py1+py2)/2;
         const spanPx=Math.abs(py2-py1);
 
         // 폰트 크기: 구간 높이와 너비에 따라 동적 조정
@@ -1568,8 +1536,12 @@ function mainChart(){
         c.font=`bold ${Math.round(fs)}px "Space Mono",monospace`;
         c.textAlign='center';
         c.textBaseline='middle';
-        // 반투명 배경
+        // 차트 경계 클램프
         const tw2=c.measureText(areaText).width+12;
+        if(midX-tw2/2<left+3)  midX=left+tw2/2+3;
+        if(midX+tw2/2>right-3) midX=right-tw2/2-3;
+        midY=Math.max(top+fs/2+6,Math.min(midY,bottom-fs/2-6));
+        // 반투명 배경
         c.fillStyle='rgba(6,10,15,.65)';
         c.fillRect(midX-tw2/2,midY-fs/2-4,tw2,fs+8);
         // 텍스트 색
@@ -1608,12 +1580,16 @@ function mainChart(){
         c.save();
         c.font='bold 10px "Space Mono",monospace';
         c.textAlign='center';
-        const ty=cx.type===1?py-22:py+30;
+        let ty=cx.type===1?py-22:py+30;
+        ty=Math.max(top+15,Math.min(ty,bottom-6));
         const tw=c.measureText(pos.txt).width+10;
+        let lx=px;
+        if(lx-tw/2<left+3) lx=left+tw/2+3;
+        if(lx+tw/2>right-3) lx=right-tw/2-3;
         c.fillStyle='rgba(6,10,15,.88)';
-        c.fillRect(px-tw/2,ty-13,tw,17);
+        c.fillRect(lx-tw/2,ty-13,tw,17);
         c.fillStyle=pos.col;
-        c.fillText(pos.txt,px,ty);
+        c.fillText(pos.txt,lx,ty);
         c.restore();
       }catch(e2){}
     });
@@ -1659,19 +1635,34 @@ function mainChart(){
       c.beginPath(); c.moveTo(xp,top); c.lineTo(xp,bottom); c.stroke();
       c.setLineDash([]);
 
-      // 마지막 확정 날짜
+      // 마지막 데이터 라벨 (확정/잠정 자동 구분) + 오늘 날짜
       const lastLbl=ALL_LABELS[n-1]||'';
-      c.fillStyle='rgba(255,255,255,.35)';
-      c.font='9px Space Mono';
-      c.textAlign='right';
-      c.fillText('◀ 확정  '+lastLbl, xp-5, top+13);
-
-      // 오늘 날짜 (예측 시작)
       const todayStr=new Date().toISOString().slice(0,10);
-      c.textAlign='left';
-      c.fillStyle='rgba(255,184,48,.8)';
-      c.font='bold 10px Space Mono';
-      c.fillText('오늘 '+todayStr+' ▶', xp+5, top+13);
+      const isProv=lastLbl>=todayStr;   // 라벨이 오늘 이후면 이번 주 잠정치
+      const leftTxt=(isProv?'◀ 잠정 ':'◀ 확정 ')+lastLbl;
+      const rightTxt='오늘 '+todayStr+' ▶';
+
+      c.font='bold 10px "Space Mono",monospace';
+      function pill(txt,px2,py3,align,fg){
+        const w=c.measureText(txt).width+10;
+        let bx=align==='right'?px2-w:px2;
+        if(bx<left+2) bx=left+2;
+        if(bx+w>right-2) bx=right-w-2;
+        c.fillStyle='rgba(6,10,15,.82)';
+        c.fillRect(bx,py3-11,w,15);
+        c.fillStyle=fg; c.textAlign='left';
+        c.fillText(txt,bx+5,py3);
+      }
+      const provCol=isProv?'rgba(255,184,48,.9)':'rgba(255,255,255,.55)';
+      const fitsRight=xp+c.measureText(rightTxt).width+18<right;
+      if(fitsRight){
+        pill(leftTxt, xp-6, top+13, 'right', provCol);
+        pill(rightTxt, xp+6, top+13, 'left', 'rgba(255,184,48,.95)');
+      }else{
+        // 우측 공간 부족 → 둘 다 선 왼쪽에 위아래 배치
+        pill(rightTxt, xp-6, top+13, 'right', 'rgba(255,184,48,.95)');
+        pill(leftTxt,  xp-6, top+30, 'right', provCol);
+      }
 
       // 예측 끝점에 오늘 날짜 배지
       if(predWeeks>0){
@@ -1692,15 +1683,19 @@ function mainChart(){
             const bw=c.measureText(badge).width+10;
             // 두 점 사이 중간
             const midPy=(pyS+pyB)/2;
+            let bx2=xEnd, by2=midPy-22;
+            if(bx2+bw/2>right-3) bx2=right-bw/2-3;
+            if(bx2-bw/2<left+3)  bx2=left+bw/2+3;
+            by2=Math.max(top+3,Math.min(by2,bottom-21));
             c.fillStyle='rgba(255,184,48,.15)';
             c.strokeStyle='rgba(255,184,48,.6)';
             c.lineWidth=1;
             const br=4;
             c.beginPath();
-            c.roundRect(xEnd-bw/2,midPy-22,bw,18,br);
+            c.roundRect(bx2-bw/2,by2,bw,18,br);
             c.fill(); c.stroke();
             c.fillStyle='rgba(255,184,48,.95)';
-            c.fillText(badge,xEnd,midPy-9);
+            c.fillText(badge,bx2,by2+13);
             c.restore();
           }
         }catch(e3){}
