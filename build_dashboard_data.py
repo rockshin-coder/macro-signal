@@ -130,6 +130,87 @@ def compute_scores(pct):
     buy =[sc(pct.iloc[i],BUY_W)  for i in range(len(pct))]
     return pd.DataFrame({'sell':sell,'buy':buy},index=pct.index)
 
+def build_daily_nowcast(raw):
+    """최근 90거래일 일별 점수 — 매일 갱신되는 지표 기반 나우캐스트"""
+    print('📅 일별 나우캐스트...')
+    cutoff = pd.Timestamp.today().normalize() - pd.Timedelta(days=2200)  # 약 6년
+    W={}
+    def dr(s, lag_days=0):
+        if s is None or s.empty: return None
+        s=s[s.index>=cutoff]
+        if s.empty: return None
+        ds=s.resample('D').last().ffill()
+        return ds.shift(lag_days) if lag_days>0 else ds
+    for k in ['vix','credit_spread','hy_spread','fin_stress','ted_spread','fedfunds','yield_curve']:
+        ds=dr(raw.get(k))
+        if ds is None: continue
+        W[k]=ds
+        W[f'{k}_2w']=ds.diff(14); W[f'{k}_4w']=ds.diff(28)
+    for k,lag in [('fed_assets',0),('initial_claims',0),('consumer_sent',14)]:
+        ds=dr(raw.get(k),lag)
+        if ds is None: continue
+        W[f'{k}_yoy']=ds.pct_change(364)*100
+        W[f'{k}_4w']=ds.diff(28)
+    ff=W.get('fedfunds')
+    if ff is not None:
+        W['rate_hiking'] =(ff.diff(91)> 0.25).astype(float)*100
+        W['rate_cutting']=(ff.diff(91)<-0.25).astype(float)*100
+    if not W:
+        print('  ⚠ 일별 데이터 없음'); return []
+    df=pd.concat(list(W.values()),axis=1,keys=list(W.keys())).sort_index()
+
+    # ffill로 만들어진 '가짜 오늘' 방지: 핵심 일간지표의 실제 마지막 관측일까지만
+    real_dates=[raw[k].index.max() for k in ['vix','hy_spread','credit_spread']
+                if k in raw and not raw[k].empty]
+    if real_dates:
+        df=df[df.index<=max(real_dates)]
+
+    n=len(df)
+    if n<400: return []
+    eval_n=min(130,n)
+    win=1825  # 5년(일)
+    out_cols={}
+    for c in df.columns:
+        arr=df[c].values.astype(float)
+        o=np.full(n,np.nan)
+        for i in range(n-eval_n,n):
+            hist=arr[max(0,i-win):i]
+            valid=hist[~np.isnan(hist)]
+            if len(valid)<200: continue
+            v=arr[i]
+            if np.isnan(v): continue
+            o[i]=float(np.mean(valid<v))*100
+        out_cols[c]=o
+    dpct=pd.DataFrame(out_cols,index=df.index)
+
+    # 일별 주가
+    pxd={}
+    try:
+        dfp=yf.download('^GSPC',
+            start=str((pd.Timestamp.today()-pd.Timedelta(days=220)).date()),
+            interval='1d',progress=False,auto_adjust=True)
+        cl=dfp['Close']
+        if isinstance(cl,pd.DataFrame): cl=cl.iloc[:,0]
+        for idx,v in cl.items():
+            pxd[str(pd.Timestamp(idx).date())]=float(v)
+    except: pass
+
+    rows=[]
+    for i in range(n-eval_n,n):
+        d=df.index[i]
+        if d.weekday()>=5: continue
+        prow=dpct.iloc[i]
+        s=sc(prow,SELL_W); b=sc(prow,BUY_W)
+        if pd.isna(s) or pd.isna(b): continue
+        ds=str(d.date())
+        p=pxd.get(ds)
+        rows.append({'date':ds,
+                     'sell':round(float(s),1),'buy':round(float(b),1),
+                     'price':round(p,0) if p else None})
+    rows=rows[-90:]
+    print(f'  {len(rows)}거래일 완료')
+    return rows
+
 def hit_rates(scores,sp,horizons=[1,2,3,4,5,6,8]):
     """각 점수구간×시점별 적중률"""
     print('📊 적중률 계산...')
@@ -258,6 +339,7 @@ def run():
         'timeline':     timeline(scores,sp,pct),
         'indicator_stats': ind_stats(pct,scores,sp),
         'sp_chart':     sp_chart(scores,sp),
+        'daily_nowcast': build_daily_nowcast(raw),
         'generated_at': datetime.now().isoformat(),
     }
     with open('dashboard_data.json','w',encoding='utf-8') as f:
