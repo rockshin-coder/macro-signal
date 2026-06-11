@@ -1511,7 +1511,7 @@ function mainChart(){
         // 구간 넓이가 너무 좁으면 스킵
         const x1=x.getPixelForValue(s), x2=x.getPixelForValue(e);
         const pxWidth=Math.abs(x2-x1);
-        if(pxWidth<40) continue; // 너무 좁으면 스킵
+        if(pxWidth<70) continue; // 너무 좁으면 스킵 (겹침 방지)
 
         // area 계산 (현재 구간)
         let areaVal=0;
@@ -1570,12 +1570,16 @@ function mainChart(){
 
     // 3) 크로스 포지션 텍스트
     const nd=computeNodes();
+    let lastLabelPx=-999;
     CROSSES.forEach((cx,ci)=>{
       const i=extLabels.indexOf(cx.date); if(i<0) return;
       const prevArea=nd[ci]?nd[ci].area:0;
       const pos=getPosLabel(cx.type,prevArea);
       try{
         const px=x.getPixelForValue(i);
+        // 직전 라벨과 너무 가까우면(60px 미만) 스킵 — 겹침 방지
+        if(px-lastLabelPx<60) return;
+        lastLabelPx=px;
         const py=y2.getPixelForValue(50);
         c.save();
         c.font='bold 10px "Space Mono",monospace';
