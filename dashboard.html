@@ -1510,6 +1510,9 @@ function mainChart(){
   const idxRealEnd=n-1+nDaily;       // 일별 실측 마지막(예측 시작점)
   const provFrom=new Date().toISOString().slice(0,10);
 
+  // 모바일 터치 툴팁에서 쓸 데이터 전역 저장
+  window.__EXT={extLabels,extSell,extBuy,extPrice,idxWeeklyEnd,idxRealEnd};
+
   // 포지션 라벨
   function getPosLabel(type,area){
     if(type===1){
@@ -1941,9 +1944,51 @@ function mainChart(){
       }
     }
     const pts=MC.getElementsAtEventForMode(fake,'index',{intersect:false},true);
-    if(pts.length>0) showTooltip(touch.clientX,touch.clientY,pts[0].index);
+    if(pts.length>0){
+      const idx=pts[0].index;
+      if(idx<=lastWeeklyIdx()){
+        showTooltip(touch.clientX,touch.clientY,idx);
+      }else{
+        showExtTooltip(touch.clientX,touch.clientY,idx);
+      }
+    }
   },{passive:false});
 }
+
+// 일별실측/예측 구간 전용 플로팅 툴팁 (모바일 터치용)
+function showExtTooltip(cx,cy,idx){
+  if(!window.__EXT) return;
+  const E=window.__EXT;
+  const isPred = idx>E.idxRealEnd;
+  const s=E.extSell[idx], b=E.extBuy[idx], p=E.extPrice[idx];
+  if(s==null&&b==null) return;
+  const sc=s>=72?'var(--red)':s>=58?'var(--yel)':'var(--cyn)';
+  const bc=b>=65?'var(--grn)':b>=45?'var(--cyn)':'var(--mut)';
+  const spread=(s!=null&&b!=null)?(s-b):null;
+  const spCol=spread>0?'var(--red)':spread<0?'var(--grn)':'var(--mut)';
+  const head=isPred
+    ?'<div class="tt-date" style="color:var(--yel)">📍 '+E.extLabels[idx]+' <span style="font-size:10px;color:var(--mut)">(예측)</span></div>'
+    :'<div class="tt-date" style="color:#00d4ff">📅 '+E.extLabels[idx]+' <span style="font-size:10px;color:var(--mut)">(일별 실측·잠정)</span></div>';
+  const note=isPred?'* 최근 추세 기반 예측값':'* 그날까지 나온 지표만으로 재계산';
+  const tip=document.getElementById('chart-tooltip');
+  tip.innerHTML=head
+    +(p?'<div class="tt-row"><span class="tt-label">S&amp;P 500</span><span class="tt-value" style="color:#6699cc">$'+p.toLocaleString()+'</span></div>':'')
+    +'<div class="tt-row"><span class="tt-label">매도 위험점수</span><span class="tt-value" style="color:'+sc+'">'+(s!=null?s.toFixed(1):'--')+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">매수 안전점수</span><span class="tt-value" style="color:'+bc+'">'+(b!=null?b.toFixed(1):'--')+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">스프레드</span><span class="tt-value" style="color:'+spCol+'">'+(spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--')+'</span></div>'
+    +'<div class="tt-sep"></div>'
+    +'<div class="tt-row" style="font-size:10px"><span class="tt-label" style="color:var(--mut)">'+note+'</span></div>';
+  tip.style.display='block'; tooltipVisible=true;
+  const tw=tip.offsetWidth||190, th=tip.offsetHeight||140;
+  const vw=window.innerWidth, vh=window.innerHeight;
+  let lx=cx+14, ly=cy-20;
+  if(lx+tw>vw-10) lx=cx-tw-14;
+  if(lx<10) lx=10;
+  if(ly+th>vh-10) ly=vh-th-10;
+  if(ly<10) ly=10;
+  tip.style.left=lx+'px'; tip.style.top=ly+'px';
+}
+function lastWeeklyIdx(){ return window.__EXT?window.__EXT.idxWeeklyEnd:1e9; }
 
 
 function setRange(days,btn){
