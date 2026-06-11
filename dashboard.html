@@ -1434,34 +1434,73 @@ function mainChart(){
     if(i>=0){ cx.type===1?c1pts[i]=50:c2pts[i]=50; }
   });
 
-  // ── 오늘까지 예측 계산 ──
-  const lastDate=new Date(ALL_LABELS[n-1]);
-  const today=new Date();
-  const daysDiff=Math.max(0,Math.round((today-lastDate)/(1000*60*60*24)));
-  const predWeeks=Math.max(1,Math.min(Math.ceil(daysDiff/7),5));
+  // ── 마지막 금요일 이후: ① 일별 실측(보정) → ② 미래 점선 예측 ──
+  const lastDate=new Date(ALL_LABELS[n-1]+'T00:00:00');
+  const today=new Date(); today.setHours(0,0,0,0);
 
-  function linForecast(arr,weeks){
-    const vals=arr.filter(v=>v!=null&&!isNaN(v));
-    if(vals.length<4) return [];
-    const recent=arr.slice(-8).filter(v=>v!=null&&!isNaN(v));
-    const slope=(recent[recent.length-1]-recent[0])/(recent.length-1||1);
-    const last=recent[recent.length-1];
-    return Array.from({length:weeks},(_,i)=>Math.max(0,Math.min(100,last+slope*(i+1))));
+  // 일별 나우캐스트에서 "마지막 주간 금요일 이후" 실측 추출 + offset 보정
+  const dn=(D&&D.daily_nowcast&&D.daily_nowcast.length)?D.daily_nowcast:[];
+  let offSell=0, offBuy=0;
+  // 보정 기준: 일별 데이터 중 마지막 주간 날짜(ALL_LABELS[n-1]) 이하에서 가장 가까운 날
+  let anchor=null;
+  for(let k=dn.length-1;k>=0;k--){
+    if(new Date(dn[k].date+'T00:00:00')<=lastDate){ anchor=dn[k]; break; }
   }
-  const predSell=linForecast(ALL_SELL,predWeeks);
-  const predBuy =linForecast(ALL_BUY, predWeeks);
+  if(anchor){
+    if(anchor.sell!=null) offSell=ALL_SELL[n-1]-anchor.sell;
+    if(anchor.buy !=null) offBuy =ALL_BUY[n-1] -anchor.buy;
+  }
+  // 마지막 주간 금요일 "이후" 영업일만 실측으로 추가
+  const dailyLabels=[], dailySell=[], dailyBuy=[], dailyPrice=[];
+  dn.forEach(r=>{
+    const rd=new Date(r.date+'T00:00:00');
+    if(rd>lastDate && rd<=today){
+      dailyLabels.push(r.date);
+      dailySell.push(r.sell!=null?Math.max(0,Math.min(100,r.sell+offSell)):null);
+      dailyBuy.push( r.buy !=null?Math.max(0,Math.min(100,r.buy +offBuy)):null);
+      dailyPrice.push(r.price??null);
+    }
+  });
+  const nDaily=dailyLabels.length;
+
+  // 실측의 마지막 지점(= 예측 시작점)
+  const realLastDate = nDaily>0 ? new Date(dailyLabels[nDaily-1]+'T00:00:00') : lastDate;
+  const realLastSell = nDaily>0 ? dailySell[nDaily-1] : ALL_SELL[n-1];
+  const realLastBuy  = nDaily>0 ? dailyBuy[nDaily-1]  : ALL_BUY[n-1];
+
+  // 미래 예측: 실측 마지막 다음 주 ~ 최대 4주
+  const predWeeks=4;
+  function linForecast(histArr, startVal, weeks){
+    const recent=histArr.slice(-8).filter(v=>v!=null&&!isNaN(v));
+    if(recent.length<3||startVal==null) return new Array(weeks).fill(null);
+    const slope=(recent[recent.length-1]-recent[0])/(recent.length-1||1);
+    return Array.from({length:weeks},(_,i)=>
+      Math.max(0,Math.min(100,startVal+slope*(i+1))));
+  }
+  // 추세 계산용 히스토리 = 주간 + 일별실측 이어붙임
+  const histSell=[...ALL_SELL, ...dailySell];
+  const histBuy =[...ALL_BUY,  ...dailyBuy];
+  const predSell=linForecast(histSell, realLastSell, predWeeks);
+  const predBuy =linForecast(histBuy,  realLastBuy,  predWeeks);
 
   const predLabels=[];
   for(let w=1;w<=predWeeks;w++){
-    const d=new Date(lastDate); d.setDate(d.getDate()+w*7);
+    const d=new Date(realLastDate); d.setDate(d.getDate()+w*7);
     predLabels.push(d.toISOString().slice(0,10));
   }
 
-  const extLabels=[...ALL_LABELS,...predLabels];
-  const extSell=[...ALL_SELL,...predSell];
-  const extBuy =[...ALL_BUY, ...predBuy];
-  const extC1=[...c1pts,...new Array(predWeeks).fill(null)];
-  const extC2=[...c2pts,...new Array(predWeeks).fill(null)];
+  // 통합 배열: [주간 확정] + [일별 실측] + [미래 예측]
+  const extLabels=[...ALL_LABELS, ...dailyLabels, ...predLabels];
+  const extSell  =[...ALL_SELL,   ...dailySell,   ...predSell];
+  const extBuy   =[...ALL_BUY,    ...dailyBuy,    ...predBuy];
+  const extPrice =[...ALL_PRICES, ...dailyPrice,  ...new Array(predWeeks).fill(null)];
+  const extC1=[...c1pts, ...new Array(nDaily+predWeeks).fill(null)];
+  const extC2=[...c2pts, ...new Array(nDaily+predWeeks).fill(null)];
+
+  // 인덱스 경계
+  const idxWeeklyEnd=n-1;            // 주간 확정 마지막
+  const idxRealEnd=n-1+nDaily;       // 일별 실측 마지막(예측 시작점)
+  const provFrom=new Date().toISOString().slice(0,10);
 
   // 포지션 라벨
   function getPosLabel(type,area){
@@ -1630,7 +1669,7 @@ function mainChart(){
 
     // 5) 예측 구분선 + 날짜 표시
     try{
-      const xp=x.getPixelForValue(n-1);
+      const xp=x.getPixelForValue(idxRealEnd);  // 실측 끝 = 예측 시작
       c.save();
       // 구분선
       c.setLineDash([5,4]);
@@ -1639,12 +1678,12 @@ function mainChart(){
       c.beginPath(); c.moveTo(xp,top); c.lineTo(xp,bottom); c.stroke();
       c.setLineDash([]);
 
-      // 마지막 데이터 라벨 (확정/잠정 자동 구분) + 오늘 날짜
-      const lastLbl=ALL_LABELS[n-1]||'';
+      // 실측 마지막 날짜 라벨 + 예측 시작 표시
+      const realLbl=extLabels[idxRealEnd]||'';
       const todayStr=new Date().toISOString().slice(0,10);
-      const isProv=lastLbl>=todayStr;   // 라벨이 오늘 이후면 이번 주 잠정치
-      const leftTxt=(isProv?'◀ 잠정 ':'◀ 확정 ')+lastLbl;
-      const rightTxt='오늘 '+todayStr+' ▶';
+      const isProv=nDaily>0;   // 일별 실측이 붙어있으면 잠정
+      const leftTxt=(isProv?'◀ 실측(잠정) ':'◀ 확정 ')+realLbl;
+      const rightTxt='예측 ▶';
 
       c.font='bold 10px "Space Mono",monospace';
       function pill(txt,px2,py3,align,fg){
@@ -1668,9 +1707,9 @@ function mainChart(){
         pill(leftTxt,  xp-6, top+30, 'right', provCol);
       }
 
-      // 예측 끝점에 오늘 날짜 배지
+      // 예측 끝점에 날짜 배지
       if(predWeeks>0){
-        const lastPredIdx=n+predWeeks-1;
+        const lastPredIdx=idxRealEnd+predWeeks;
         try{
           const xEnd=x.getPixelForValue(lastPredIdx);
           // 매도 예측 끝점
@@ -1683,7 +1722,7 @@ function mainChart(){
             c.save();
             c.font='bold 10px Space Mono';
             c.textAlign='center';
-            const badge=todayStr;
+            const badge=predLabels[predLabels.length-1]||'';
             const bw=c.measureText(badge).width+10;
             // 두 점 사이 중간
             const midPy=(pyS+pyB)/2;
@@ -1714,27 +1753,27 @@ function mainChart(){
   MC=new Chart(ctx,{
     type:'line', plugins:[overlayPlugin],
     data:{labels:extLabels, datasets:[
-      {label:'SP500',data:[...pNorm,...new Array(predWeeks).fill(null)],
+      {label:'SP500',data:[...pNorm,...dailyPrice.map(p=>p?(p/maxP*100):null),...new Array(predWeeks).fill(null)],
        borderColor:'rgba(102,153,204,.9)',backgroundColor:grad,
        borderWidth:2.5,pointRadius:0,tension:.4,fill:true,yAxisID:'y'},
-      {label:'매도',data:[...ALL_SELL,...new Array(predWeeks).fill(null)],
+      {label:'매도',data:[...ALL_SELL,...dailySell,...new Array(predWeeks).fill(null)],
        borderColor:'rgba(255,51,68,.95)',backgroundColor:'transparent',
        borderWidth:2,pointRadius:0,tension:.3,yAxisID:'y2'},
-      {label:'매수',data:[...ALL_BUY,...new Array(predWeeks).fill(null)],
+      {label:'매수',data:[...ALL_BUY,...dailyBuy,...new Array(predWeeks).fill(null)],
        borderColor:'rgba(0,232,122,.95)',backgroundColor:'transparent',
        borderWidth:2,pointRadius:0,tension:.3,yAxisID:'y2'},
       {label:'매도예측',
-       data:[...new Array(n-1).fill(null),ALL_SELL[n-1],...predSell],
+       data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSell],
        borderColor:'rgba(255,80,80,.6)',backgroundColor:'transparent',
        borderWidth:2,borderDash:[6,4],
-       pointRadius:[...new Array(n).fill(0),...new Array(predWeeks).fill(3)],
+       pointRadius:[...new Array(idxRealEnd+1).fill(0),...new Array(predWeeks).fill(3)],
        pointBackgroundColor:'rgba(255,80,80,.7)',
        tension:.3,yAxisID:'y2'},
       {label:'매수예측',
-       data:[...new Array(n-1).fill(null),ALL_BUY[n-1],...predBuy],
+       data:[...new Array(idxRealEnd).fill(null),realLastBuy,...predBuy],
        borderColor:'rgba(0,232,122,.55)',backgroundColor:'transparent',
        borderWidth:2,borderDash:[6,4],
-       pointRadius:[...new Array(n).fill(0),...new Array(predWeeks).fill(3)],
+       pointRadius:[...new Array(idxRealEnd+1).fill(0),...new Array(predWeeks).fill(3)],
        pointBackgroundColor:'rgba(0,232,122,.65)',
        tension:.3,yAxisID:'y2'},
       {label:'TYPE1',data:extC1,type:'scatter',
@@ -1758,8 +1797,9 @@ function mainChart(){
             if(!pts||pts.length===0) return;
             const idx=pts[0].dataIndex;
             if(idx==null) return;
-            const isPred=idx>=n;
-            const p=idx<n?ALL_PRICES[idx]:null;
+            const isPred = idx>idxRealEnd;            // 예측 구간(미래)
+            const isProvis = idx>idxWeeklyEnd && idx<=idxRealEnd;  // 일별 실측(잠정)
+            const p=extPrice[idx];
             const s=extSell[idx], b=extBuy[idx];
             const sc=s>=72?'var(--red)':s>=58?'var(--yel)':'var(--cyn)';
             const bc=b>=65?'var(--grn)':b>=45?'var(--cyn)':'var(--mut)';
@@ -1789,17 +1829,41 @@ function mainChart(){
               if(ly+th>vh-10) ly=vh-th-10;
               if(ly<10) ly=10;
               tip.style.left=lx+'px'; tip.style.top=ly+'px';
+            } else if(isProvis){
+              // 일별 실측(잠정) 구간: 플로팅 툴팁
+              const tip=document.getElementById('chart-tooltip');
+              tip.innerHTML=`
+                <div class="tt-date" style="color:#00d4ff">📅 ${extLabels[idx]} <span style="font-size:10px;color:var(--mut)">(일별 실측·잠정)</span></div>
+                ${p?`<div class="tt-row"><span class="tt-label">S&amp;P 500</span><span class="tt-value" style="color:#6699cc">$${p.toLocaleString()}</span></div>`:''}
+                <div class="tt-row"><span class="tt-label">매도 위험점수</span><span class="tt-value" style="color:${sc}">${s!=null?s.toFixed(1):'--'}</span></div>
+                <div class="tt-row"><span class="tt-label">매수 안전점수</span><span class="tt-value" style="color:${bc}">${b!=null?b.toFixed(1):'--'}</span></div>
+                <div class="tt-row"><span class="tt-label">스프레드</span><span class="tt-value" style="color:${spCol}">${spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--'}</span></div>
+                <div class="tt-sep"></div>
+                <div class="tt-row" style="font-size:10px"><span class="tt-label" style="color:var(--mut)">* 그날까지 나온 지표만으로 재계산</span></div>`;
+              tip.style.display='block';
+              tooltipVisible=true;
+              const pos=c2.chart.canvas.getBoundingClientRect();
+              const tp=c2.tooltip;
+              let lx=pos.left+tp.caretX+14, ly=pos.top+tp.caretY-20;
+              const tw=tip.offsetWidth||180, th=tip.offsetHeight||120;
+              const vw=window.innerWidth, vh=window.innerHeight;
+              if(lx+tw>vw-10) lx=pos.left+tp.caretX-tw-10;
+              if(ly+th>vh-10) ly=vh-th-10;
+              if(ly<10) ly=10;
+              tip.style.left=lx+'px'; tip.style.top=ly+'px';
             } else {
               hideTooltip();
             }
 
             // 하단 info bar는 항상 업데이트
+            const tag=isPred?' <span style="color:var(--yel)">예측</span>'
+                    :isProvis?' <span style="color:#00d4ff">잠정</span>':'';
             document.getElementById('chart-info').innerHTML=`
-              <div class="ci">날짜<span>${extLabels[idx]}${isPred?' <span style="color:var(--yel)">예측</span>':''}</span></div>
+              <div class="ci">날짜<span>${extLabels[idx]}${tag}</span></div>
               ${p?`<div class="ci">S&P500<span style="color:#6699cc">$${p.toLocaleString()}</span></div>`:''}
               <div class="ci">매도위험<span style="color:${sc}">${s!=null?s.toFixed(1):'--'}</span></div>
               <div class="ci">매수안전<span style="color:${bc}">${b!=null?b.toFixed(1):'--'}</span></div>
-              ${isPred?`<div class="ci">스프레드<span style="color:${spCol}">${spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--'}</span></div>`:''}`;
+              ${(isPred||isProvis)?`<div class="ci">스프레드<span style="color:${spCol}">${spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--'}</span></div>`:''}`;
           }
         },
         zoom:{
