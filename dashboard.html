@@ -520,10 +520,10 @@ table.ht tr:hover td{background:rgba(255,255,255,.025)}
         <div class="range-btns" id="range-btns">
           <button class="rbtn" onclick="setRange(90,this)">3M</button>
           <button class="rbtn" onclick="setRange(180,this)">6M</button>
-          <button class="rbtn" onclick="setRange(365,this)">1Y</button>
+          <button class="rbtn on" onclick="setRange(365,this)">1Y</button>
           <button class="rbtn" onclick="setRange(730,this)">2Y</button>
           <button class="rbtn" onclick="setRange(1825,this)">5Y</button>
-          <button class="rbtn on" onclick="setRange(0,this)">ALL</button>
+          <button class="rbtn" onclick="setRange(0,this)">ALL</button>
         </div>
         <div class="chart-actions">
           <button class="cbtn" onclick="zoomIn()">＋</button>
@@ -896,6 +896,14 @@ function render(){
   crossProximity();
   probTable();
   powList(D.indicator_stats);
+  // 기본 화면: 최근 1년 (떡칠 방지 + 일별 실측 잘 보임)
+  try{
+    const n=ALL_LABELS.length;
+    const end=new Date(ALL_LABELS[n-1]);
+    const start=new Date(end); start.setDate(start.getDate()-365);
+    const si=ALL_LABELS.findIndex(d=>new Date(d)>=start);
+    if(si>0&&MC) MC.zoomScale('x',{min:si,max:n+5},'default');
+  }catch(e){}
 }
 
 /* ── GAUGES ── */
