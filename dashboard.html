@@ -1476,25 +1476,45 @@ function mainChart(){
   const realLastSell = nDaily>0 ? dailySell[nDaily-1] : ALL_SELL[n-1];
   const realLastBuy  = nDaily>0 ? dailyBuy[nDaily-1]  : ALL_BUY[n-1];
 
-  // 미래 예측: 실측 마지막 다음 주 ~ 최대 4주
-  const predWeeks=4;
-  function linForecast(histArr, startVal, weeks){
-    const recent=histArr.slice(-8).filter(v=>v!=null&&!isNaN(v));
-    if(recent.length<3||startVal==null) return new Array(weeks).fill(null);
-    const slope=(recent[recent.length-1]-recent[0])/(recent.length-1||1);
-    return Array.from({length:weeks},(_,i)=>
-      Math.max(0,Math.min(100,startVal+slope*(i+1))));
-  }
-  // 추세 계산용 히스토리 = 주간 + 일별실측 이어붙임
-  const histSell=[...ALL_SELL, ...dailySell];
-  const histBuy =[...ALL_BUY,  ...dailyBuy];
-  const predSell=linForecast(histSell, realLastSell, predWeeks);
-  const predBuy =linForecast(histBuy,  realLastBuy,  predWeeks);
-
-  const predLabels=[];
-  for(let w=1;w<=predWeeks;w++){
-    const d=new Date(realLastDate); d.setDate(d.getDate()+w*7);
-    predLabels.push(d.toISOString().slice(0,10));
+  // 미래 예측: json의 패턴 매칭 결과 사용 (없으면 직선 폴백)
+  const fc=(D&&D.forecast&&D.forecast.points&&D.forecast.points.length)?D.forecast:null;
+  const predWeeks=fc?fc.points.length:4;
+  let predSell, predBuy, predSellLo, predSellHi, predBuyLo, predBuyHi, predLabels=[];
+  if(fc){
+    predSell  =fc.points.map(p=>p.sell);
+    predBuy   =fc.points.map(p=>p.buy);
+    predSellLo=fc.points.map(p=>p.sell_lo);
+    predSellHi=fc.points.map(p=>p.sell_hi);
+    predBuyLo =fc.points.map(p=>p.buy_lo);
+    predBuyHi =fc.points.map(p=>p.buy_hi);
+    // 예측 시작점 = 실측 마지막에 맞춰 평행이동(연결 자연스럽게)
+    const offS=(realLastSell!=null&&fc.anchor_sell!=null)?(realLastSell-fc.anchor_sell):0;
+    const offB=(realLastBuy !=null&&fc.anchor_buy !=null)?(realLastBuy -fc.anchor_buy ):0;
+    const cl=v=>Math.max(0,Math.min(100,v));
+    predSell  =predSell.map(v=>cl(v+offS));   predBuy  =predBuy.map(v=>cl(v+offB));
+    predSellLo=predSellLo.map(v=>cl(v+offS)); predSellHi=predSellHi.map(v=>cl(v+offS));
+    predBuyLo =predBuyLo.map(v=>cl(v+offB));  predBuyHi =predBuyHi.map(v=>cl(v+offB));
+    for(let w=1;w<=predWeeks;w++){
+      const d=new Date(realLastDate); d.setDate(d.getDate()+w*7);
+      predLabels.push(d.toISOString().slice(0,10));
+    }
+  }else{
+    // 폴백: 직선
+    function linForecast(histArr, startVal, weeks){
+      const recent=histArr.slice(-8).filter(v=>v!=null&&!isNaN(v));
+      if(recent.length<3||startVal==null) return new Array(weeks).fill(null);
+      const slope=(recent[recent.length-1]-recent[0])/(recent.length-1||1);
+      return Array.from({length:weeks},(_,i)=>Math.max(0,Math.min(100,startVal+slope*(i+1))));
+    }
+    const histSell=[...ALL_SELL,...dailySell], histBuy=[...ALL_BUY,...dailyBuy];
+    predSell=linForecast(histSell,realLastSell,predWeeks);
+    predBuy =linForecast(histBuy, realLastBuy, predWeeks);
+    predSellLo=predSell.slice(); predSellHi=predSell.slice();
+    predBuyLo =predBuy.slice();  predBuyHi =predBuy.slice();
+    for(let w=1;w<=predWeeks;w++){
+      const d=new Date(realLastDate); d.setDate(d.getDate()+w*7);
+      predLabels.push(d.toISOString().slice(0,10));
+    }
   }
 
   // 통합 배열: [주간 확정] + [일별 실측] + [미래 예측]
@@ -1773,19 +1793,36 @@ function mainChart(){
       {label:'매수',data:[...ALL_BUY,...dailyBuy,...new Array(predWeeks).fill(null)],
        borderColor:'rgba(0,232,122,.95)',backgroundColor:'transparent',
        borderWidth:2,pointRadius:0,tension:.3,yAxisID:'y2'},
+      // ── 예측 밴드 (±1 표준편차) ──
+      {label:'_매도밴드하',
+       data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSellLo],
+       borderColor:'transparent',backgroundColor:'transparent',
+       pointRadius:0,tension:.3,yAxisID:'y2',fill:false},
+      {label:'_매도밴드상',
+       data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSellHi],
+       borderColor:'transparent',backgroundColor:'rgba(255,80,80,.13)',
+       pointRadius:0,tension:.3,yAxisID:'y2',fill:'-1'},
+      {label:'_매수밴드하',
+       data:[...new Array(idxRealEnd).fill(null),realLastBuy,...predBuyLo],
+       borderColor:'transparent',backgroundColor:'transparent',
+       pointRadius:0,tension:.3,yAxisID:'y2',fill:false},
+      {label:'_매수밴드상',
+       data:[...new Array(idxRealEnd).fill(null),realLastBuy,...predBuyHi],
+       borderColor:'transparent',backgroundColor:'rgba(0,232,122,.12)',
+       pointRadius:0,tension:.3,yAxisID:'y2',fill:'-1'},
       {label:'매도예측',
        data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSell],
-       borderColor:'rgba(255,80,80,.6)',backgroundColor:'transparent',
+       borderColor:'rgba(255,80,80,.65)',backgroundColor:'transparent',
        borderWidth:2,borderDash:[6,4],
        pointRadius:[...new Array(idxRealEnd+1).fill(0),...new Array(predWeeks).fill(3)],
-       pointBackgroundColor:'rgba(255,80,80,.7)',
+       pointBackgroundColor:'rgba(255,80,80,.75)',
        tension:.3,yAxisID:'y2'},
       {label:'매수예측',
        data:[...new Array(idxRealEnd).fill(null),realLastBuy,...predBuy],
-       borderColor:'rgba(0,232,122,.55)',backgroundColor:'transparent',
+       borderColor:'rgba(0,232,122,.6)',backgroundColor:'transparent',
        borderWidth:2,borderDash:[6,4],
        pointRadius:[...new Array(idxRealEnd+1).fill(0),...new Array(predWeeks).fill(3)],
-       pointBackgroundColor:'rgba(0,232,122,.65)',
+       pointBackgroundColor:'rgba(0,232,122,.7)',
        tension:.3,yAxisID:'y2'},
       {label:'TYPE1',data:extC1,type:'scatter',
        backgroundColor:'rgba(0,212,255,.85)',borderColor:'#00d4ff',borderWidth:2,
@@ -1826,7 +1863,7 @@ function mainChart(){
                 <div class="tt-row"><span class="tt-label">매수 안전점수</span><span class="tt-value" style="color:${bc}">${b!=null?b.toFixed(1):'--'}</span></div>
                 <div class="tt-row"><span class="tt-label">스프레드</span><span class="tt-value" style="color:${spCol}">${spread!=null?(spread>=0?'+':'')+spread.toFixed(1):'--'}</span></div>
                 <div class="tt-sep"></div>
-                <div class="tt-row" style="font-size:10px"><span class="tt-label" style="color:var(--mut)">* 최근 추세 기반 예측값</span></div>`;
+                <div class="tt-row" style="font-size:10px"><span class="tt-label" style="color:var(--mut)">* 과거 유사패턴 30개 평균 ±범위</span></div>`;
               tip.style.display='block';
               tooltipVisible=true;
               // 위치
@@ -1897,7 +1934,7 @@ function mainChart(){
       onHover:(e,els,chart)=>{
         if(!e.native) return;
         const cEls=chart.getElementsAtEventForMode(e.native,'nearest',{intersect:true},true)
-                        .filter(el=>el.datasetIndex>=5);
+                        .filter(el=>{const ds=MC.data.datasets[el.datasetIndex];return ds&&(ds.label==='TYPE1'||ds.label==='TYPE2');});
         if(cEls.length>0){
           const idx=cEls[0].index;
           const info=CROSS_MAP[extLabels[idx]];
@@ -1932,7 +1969,7 @@ function mainChart(){
     const fake={clientX:touch.clientX,clientY:touch.clientY,
                 offsetX:touch.clientX-rect.left,offsetY:touch.clientY-rect.top,target:this};
     const cEls=MC.getElementsAtEventForMode(fake,'nearest',{intersect:true},true)
-                  .filter(el=>el.datasetIndex>=5);
+                  .filter(el=>{const ds=MC.data.datasets[el.datasetIndex];return ds&&(ds.label==='TYPE1'||ds.label==='TYPE2');});
     if(cEls.length>0){
       const idx=cEls[0].index;
       const info=CROSS_MAP[extLabels[idx]];
@@ -1969,7 +2006,7 @@ function showExtTooltip(cx,cy,idx){
   const head=isPred
     ?'<div class="tt-date" style="color:var(--yel)">📍 '+E.extLabels[idx]+' <span style="font-size:10px;color:var(--mut)">(예측)</span></div>'
     :'<div class="tt-date" style="color:#00d4ff">📅 '+E.extLabels[idx]+' <span style="font-size:10px;color:var(--mut)">(일별 실측·잠정)</span></div>';
-  const note=isPred?'* 최근 추세 기반 예측값':'* 그날까지 나온 지표만으로 재계산';
+  const note=isPred?'* 과거 유사패턴 30개 평균 ±범위':'* 그날까지 나온 지표만으로 재계산';
   const tip=document.getElementById('chart-tooltip');
   tip.innerHTML=head
     +(p?'<div class="tt-row"><span class="tt-label">S&amp;P 500</span><span class="tt-value" style="color:#6699cc">$'+p.toLocaleString()+'</span></div>':'')
