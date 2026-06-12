@@ -1933,15 +1933,7 @@ function mainChart(){
         },
         zoom:{
           zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoom(){clearRangeBtns();}},
-          pan:{enabled:true,mode:'x',
-               onPanStart({event}){
-                 // 터치 입력이면 pan 취소(한 손가락=툴팁), 마우스면 허용
-                 const t=event&&event.srcEvent&&event.srcEvent.pointerType;
-                 const et=event&&event.srcEvent&&event.srcEvent.type;
-                 if(t==='touch'||(et&&et.indexOf('touch')>=0)) return false;
-                 return true;
-               },
-               onPan(){clearRangeBtns();}},
+          pan:{enabled:true,mode:'x',onPan(){clearRangeBtns();}},
           limits:{x:{minRange:8}},
         }
       },
@@ -2037,12 +2029,11 @@ function mainChart(){
 
   mcEl.addEventListener('touchmove',function(e){
     if(e.touches.length>1) return;   // 핀치줌은 통과
-    e.preventDefault();              // 스크롤 막고 툴팁 갱신
-    handleTouch(e.touches[0]);
-  },{passive:false});
+    handleTouch(e.touches[0]);       // pan과 공존: 끌면서 값도 표시
+  },{passive:true});
 
   mcEl.addEventListener('touchend',function(e){
-    // 손가락 떼면 잠시 후 툴팁 유지(읽을 시간) — 아무것도 안 함
+    // 손가락 떼면 툴팁 유지(읽을 시간)
   },{passive:true});
 }
 
