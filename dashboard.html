@@ -1532,6 +1532,11 @@ function mainChart(){
 
   // 모바일 터치 툴팁에서 쓸 데이터 전역 저장
   window.__EXT={extLabels,extSell,extBuy,extPrice,idxWeeklyEnd,idxRealEnd};
+  // 예측 밴드 직접 그리기용 데이터
+  window.__BAND=fc?{
+    anchorSell:realLastSell, anchorBuy:realLastBuy,
+    predSellLo, predSellHi, predBuyLo, predBuyHi
+  }:null;
 
   // 포지션 라벨
   function getPosLabel(type,area){
@@ -1551,13 +1556,15 @@ function mainChart(){
     const tot=extLabels.length;
     c.save();
 
-    // 1) AREA 색칠
+    // 1) AREA 색칠 (예측 구간 제외 = idxRealEnd까지만)
     const cIdxs=[0,...CROSSES.map(cx=>{
       const i=extLabels.indexOf(cx.date); return i>=0?i:null;
-    }).filter(i=>i!=null),tot-1];
+    }).filter(i=>i!=null),idxRealEnd];
 
     for(let bi=0;bi<cIdxs.length-1;bi++){
-      const s=cIdxs[bi],e=cIdxs[bi+1];
+      let s=cIdxs[bi],e=cIdxs[bi+1];
+      if(s>=idxRealEnd) continue;        // 예측 구간은 색칠 안 함
+      if(e>idxRealEnd) e=idxRealEnd;     // 마지막 구간은 실측 끝까지만
       const mid=Math.floor((s+e)/2);
       const sv=extSell[mid],bv=extBuy[mid];
       if(sv==null||bv==null) continue;
@@ -1701,6 +1708,33 @@ function mainChart(){
     // 5) 예측 구분선 + 날짜 표시
     try{
       const xp=x.getPixelForValue(idxRealEnd);  // 실측 끝 = 예측 시작
+
+      // ★ 예측 밴드 직접 그리기 (±표준편차) — 예측 구간만
+      if(window.__BAND){
+        const B=window.__BAND;
+        function drawBand(loArr,hiArr,startIdx,fillStyle){
+          c.save(); c.beginPath();
+          let started=false;
+          // 위쪽(hi) 왼→오
+          for(let k=0;k<hiArr.length;k++){
+            const xi=startIdx+k;
+            try{const px=x.getPixelForValue(xi),py=y2.getPixelForValue(hiArr[k]);
+              started?c.lineTo(px,py):(c.moveTo(px,py),started=true);}catch(e){}
+          }
+          // 아래쪽(lo) 오→왼
+          for(let k=loArr.length-1;k>=0;k--){
+            const xi=startIdx+k;
+            try{c.lineTo(x.getPixelForValue(xi),y2.getPixelForValue(loArr[k]));}catch(e){}
+          }
+          c.closePath(); c.fillStyle=fillStyle; c.fill(); c.restore();
+        }
+        // 예측 시작점(idxRealEnd)부터 — 앵커값 포함해서 자연스럽게
+        const sLo=[B.anchorSell,...B.predSellLo], sHi=[B.anchorSell,...B.predSellHi];
+        const bLo=[B.anchorBuy, ...B.predBuyLo ], bHi=[B.anchorBuy, ...B.predBuyHi ];
+        drawBand(sLo,sHi,idxRealEnd,'rgba(255,80,80,.22)');
+        drawBand(bLo,bHi,idxRealEnd,'rgba(0,232,122,.20)');
+      }
+
       c.save();
       // 구분선
       c.setLineDash([5,4]);
@@ -1793,23 +1827,6 @@ function mainChart(){
       {label:'매수',data:[...ALL_BUY,...dailyBuy,...new Array(predWeeks).fill(null)],
        borderColor:'rgba(0,232,122,.95)',backgroundColor:'transparent',
        borderWidth:2,pointRadius:0,tension:.3,yAxisID:'y2'},
-      // ── 예측 밴드 (±1 표준편차) ──
-      {label:'_매도밴드하',
-       data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSellLo],
-       borderColor:'transparent',backgroundColor:'transparent',
-       pointRadius:0,tension:.3,yAxisID:'y2',fill:false},
-      {label:'_매도밴드상',
-       data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSellHi],
-       borderColor:'transparent',backgroundColor:'rgba(255,80,80,.13)',
-       pointRadius:0,tension:.3,yAxisID:'y2',fill:'-1'},
-      {label:'_매수밴드하',
-       data:[...new Array(idxRealEnd).fill(null),realLastBuy,...predBuyLo],
-       borderColor:'transparent',backgroundColor:'transparent',
-       pointRadius:0,tension:.3,yAxisID:'y2',fill:false},
-      {label:'_매수밴드상',
-       data:[...new Array(idxRealEnd).fill(null),realLastBuy,...predBuyHi],
-       borderColor:'transparent',backgroundColor:'rgba(0,232,122,.12)',
-       pointRadius:0,tension:.3,yAxisID:'y2',fill:'-1'},
       {label:'매도예측',
        data:[...new Array(idxRealEnd).fill(null),realLastSell,...predSell],
        borderColor:'rgba(255,80,80,.65)',backgroundColor:'transparent',
@@ -1916,7 +1933,7 @@ function mainChart(){
         },
         zoom:{
           zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoom(){clearRangeBtns();}},
-          pan:{enabled:true,mode:'x',onPan(){clearRangeBtns();}},
+          pan:{enabled:false},
           limits:{x:{minRange:8}},
         }
       },
@@ -1962,12 +1979,15 @@ function mainChart(){
     hideTooltip(); hideCrossTip();
   });
 
-  document.getElementById('mc').addEventListener('touchend',function(e){
-    e.preventDefault();
-    const touch=e.changedTouches[0];
-    const rect=this.getBoundingClientRect();
+  // ── 모바일 터치: 올려놓는 즉시 + 움직이는 동안 계속 수치 표시 ──
+  const mcEl=document.getElementById('mc');
+  function handleTouch(touch){
+    const rect=mcEl.getBoundingClientRect();
+    const ox=touch.clientX-rect.left, oy=touch.clientY-rect.top;
     const fake={clientX:touch.clientX,clientY:touch.clientY,
-                offsetX:touch.clientX-rect.left,offsetY:touch.clientY-rect.top,target:this};
+                offsetX:ox,offsetY:oy,target:mcEl,
+                x:ox,y:oy};
+    // 1) 크로스 점 먼저 (가까이 터치 시)
     const cEls=MC.getElementsAtEventForMode(fake,'nearest',{intersect:true},true)
                   .filter(el=>{const ds=MC.data.datasets[el.datasetIndex];return ds&&(ds.label==='TYPE1'||ds.label==='TYPE2');});
     if(cEls.length>0){
@@ -1980,16 +2000,42 @@ function mainChart(){
         hideTooltip(); return;
       }
     }
-    const pts=MC.getElementsAtEventForMode(fake,'index',{intersect:false},true);
-    if(pts.length>0){
-      const idx=pts[0].index;
-      if(idx<=lastWeeklyIdx()){
-        showTooltip(touch.clientX,touch.clientY,idx);
-      }else{
-        showExtTooltip(touch.clientX,touch.clientY,idx);
-      }
+    if(crossTipOn) hideCrossTip();
+    // 2) x축 위치로 가장 가까운 데이터 인덱스 찾기 (가장 안정적)
+    let idx=null;
+    try{
+      const xVal=MC.scales.x.getValueForPixel(ox);
+      idx=Math.round(xVal);
+    }catch(e){}
+    if(idx==null){
+      const pts=MC.getElementsAtEventForMode(fake,'index',{intersect:false},true);
+      if(pts.length>0) idx=pts[0].index;
     }
+    if(idx==null) return;
+    if(idx<0) idx=0;
+    if(idx>extLabels.length-1) idx=extLabels.length-1;
+    // 3) 구간별 툴팁
+    if(idx<=lastWeeklyIdx()){
+      showTooltip(touch.clientX,touch.clientY,idx);
+    }else{
+      showExtTooltip(touch.clientX,touch.clientY,idx);
+    }
+  }
+
+  mcEl.addEventListener('touchstart',function(e){
+    if(e.touches.length>1) return;   // 핀치줌은 통과
+    handleTouch(e.touches[0]);
+  },{passive:true});
+
+  mcEl.addEventListener('touchmove',function(e){
+    if(e.touches.length>1) return;   // 핀치줌은 통과
+    e.preventDefault();              // 스크롤 막고 툴팁 갱신
+    handleTouch(e.touches[0]);
   },{passive:false});
+
+  mcEl.addEventListener('touchend',function(e){
+    // 손가락 떼면 잠시 후 툴팁 유지(읽을 시간) — 아무것도 안 함
+  },{passive:true});
 }
 
 // 일별실측/예측 구간 전용 플로팅 툴팁 (모바일 터치용)
