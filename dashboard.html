@@ -1933,7 +1933,15 @@ function mainChart(){
         },
         zoom:{
           zoom:{wheel:{enabled:true},pinch:{enabled:true},mode:'x',onZoom(){clearRangeBtns();}},
-          pan:{enabled:false},
+          pan:{enabled:true,mode:'x',
+               onPanStart({event}){
+                 // 터치 입력이면 pan 취소(한 손가락=툴팁), 마우스면 허용
+                 const t=event&&event.srcEvent&&event.srcEvent.pointerType;
+                 const et=event&&event.srcEvent&&event.srcEvent.type;
+                 if(t==='touch'||(et&&et.indexOf('touch')>=0)) return false;
+                 return true;
+               },
+               onPan(){clearRangeBtns();}},
           limits:{x:{minRange:8}},
         }
       },
