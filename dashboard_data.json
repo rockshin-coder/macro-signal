@@ -542,7 +542,7 @@
           "lo": 65,
           "hi": 75,
           "up_prob": 25.3,
-          "avg_ret": 0.12,
+          "avg_ret": 0.11,
           "n": 99
         },
         {
@@ -6231,7 +6231,7 @@
       "date": "2026-07-24",
       "sell": 44.1,
       "buy": 66.0,
-      "sp500": 7412.0,
+      "sp500": 7408.0,
       "sell_contributions": {
         "vix": 7.1,
         "vix_2w": 1.9,
@@ -6386,7 +6386,7 @@
       "score_type": "buy",
       "high_q_ret": 0.85,
       "low_q_ret": 0.83,
-      "predictive_power": 0.03
+      "predictive_power": 0.02
     },
     {
       "indicator": "rate_cutting",
@@ -11894,12 +11894,6 @@
       "price": 7408.0,
       "sell": 44.0,
       "buy": 59.8
-    },
-    {
-      "date": "2026-07-24",
-      "price": 7412.0,
-      "sell": 44.1,
-      "buy": 66.0
     }
   ],
   "daily_nowcast": [
@@ -12513,5 +12507,5 @@
       }
     ]
   },
-  "generated_at": "2026-07-25T17:02:27.725994"
+  "generated_at": "2026-07-26T17:05:55.511471"
 }
