@@ -6305,7 +6305,7 @@
       "date": "2026-08-28",
       "sell": 28.8,
       "buy": 72.5,
-      "sp500": 7712.0,
+      "sp500": 7731.0,
       "sell_contributions": {
         "vix": 2.3,
         "vix_2w": 1.2,
@@ -6350,9 +6350,9 @@
       "direction": "high",
       "weight": 0.145,
       "score_type": "sell",
-      "high_q_ret": 1.46,
+      "high_q_ret": 1.47,
       "low_q_ret": 1.92,
-      "predictive_power": 0.46
+      "predictive_power": 0.45
     },
     {
       "indicator": "yield_curve_4w",
@@ -11998,12 +11998,6 @@
       "price": 7731.0,
       "sell": 32.4,
       "buy": 64.2
-    },
-    {
-      "date": "2026-08-28",
-      "price": 7712.0,
-      "sell": 28.8,
-      "buy": 72.5
     }
   ],
   "daily_nowcast": [
@@ -12617,5 +12611,5 @@
       }
     ]
   },
-  "generated_at": "2026-08-29T00:28:11.087892"
+  "generated_at": "2026-08-29T19:17:44.292932"
 }
